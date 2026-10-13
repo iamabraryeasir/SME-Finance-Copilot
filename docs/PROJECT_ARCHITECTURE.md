@@ -167,58 +167,75 @@ flowchart TD
 
 ### Unified Schema Definition
 
-```prisma
-// use prisma-8
+```mermaid
+  erDiagram
+  User {
+    String id PK "Default: gen_random_uuid()"
+    String name
+    String email UK
+    Boolean emailVerified
+    String image
+    DateTime createdAt
+    DateTime updatedAt
+    String role "Enum: admin, user"
+  }
 
-// --- BETTER AUTH NATIVE MODELS (Admin Plugin Enabled) ---
-model User {
-  id            String    @id @default(sql gen_random_uuid())
-  name          String
-  email         String    @unique
-  emailVerified Boolean
-  image         String?
-  createdAt     DateTime
-  updatedAt     DateTime
-  role          String?   @default("user") // Enforces 'admin' or 'user' logic
-  sessions      Session[]
-  accounts      Account[]
-  invoices      Invoice[]
-}
+  Session {
+    String id PK
+    DateTime expiresAt
+    String token UK
+    DateTime createdAt
+    DateTime updatedAt
+    String ipAddress
+    String userAgent
+    String userId FK "Indexed"
+    String impersonatedBy
+  }
 
-model Session {
-  id             String   @id
-  expiresAt      DateTime
-  token          String   @unique
-  createdAt      DateTime
-  updatedAt      DateTime
-  ipAddress      String?
-  userAgent      String?
-  userId         String
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  impersonatedBy String?
-}
+  Account {
+    String id PK
+    String accountId
+    String providerId
+    String userId FK "Indexed"
+    String accessToken
+    String refreshToken
+    String idToken
+    DateTime accessTokenExpiresAt
+    DateTime refreshTokenExpiresAt
+    String scope
+    String password
+    DateTime createdAt
+    DateTime updatedAt
+  }
 
-// Account and Verification models omitted for brevity...
+  Verification {
+    String id PK
+    String identifier
+    String value
+    DateTime expiresAt
+    DateTime createdAt
+    DateTime updatedAt
+  }
 
-// --- FINANCIAL COPILOT MODELS ---
-model Invoice {
-  id            String   @id @default(sql gen_random_uuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  invoiceNumber String
-  counterparty  String
-  type          String   // Enum: 'RECEIVABLE' or 'PAYABLE'
-  amount        Float
-  currency      String   @default("USD")
-  issueDate     DateTime
-  dueDate       DateTime
-  status        String   // Enum: 'PENDING', 'OVERDUE', 'PAID'
-  createdAt     DateTime
-  updatedAt     DateTime
-}
+  Invoice {
+    String id PK "Default: gen_random_uuid()"
+    String userId FK "Indexed"
+    String invoiceNumber
+    String counterparty
+    String type "Enum: RECEIVABLE, PAYABLE"
+    Float amount
+    String currency "Default: 'USD'"
+    DateTime issueDate
+    DateTime dueDate
+    String status "Enum: PENDING, OVERDUE, PAID"
+    DateTime createdAt
+    DateTime updatedAt
+  }
+
+  User ||--o{ Session : "authenticates via"
+  User ||--o{ Account : "links OAuth/Credentials"
+  User ||--o{ Invoice : "owns financial records"
 ```
-
----
 
 ## 4. Agentic Workflow & Background Processing
 
