@@ -60,7 +60,7 @@ flowchart TD
   end
 
   subgraph DataLayer["Persistence and Database Layer"]
-    PrismaClient["Prisma 8 ORM Client"]
+    PrismaClient["Prisma 7 ORM Client"]
     SupabaseDB[("Supabase PostgreSQL Database")]
   end
 
@@ -117,8 +117,8 @@ flowchart TD
 ```text
 |
 ├── prisma/
-│   ├── schema.prisma       # Prisma 8 definition file
-│   └── prisma.config.ts    # Prisma 8 config using definePrismaConfig
+│   └── schema.prisma       # Prisma 7 schema definition
+├── prisma7.config.ts       # Prisma 7 config using defineConfig
 ├── src/
 │   ├── app/
 │   │   ├── (auth)/         # /sign-in, /sign-up routes
@@ -135,7 +135,7 @@ flowchart TD
 │   ├── lib/
 │   │   ├── auth.ts         # Better Auth server instance
 │   │   ├── auth-client.ts  # Better Auth client instance
-│   │   ├── prisma.ts       # Prisma 8 client initialization
+│   │   ├── prisma.ts       # Prisma 7 client initialization (@prisma/adapter-pg)
 │   │   ├── redis.ts        # Upstash Redis client
 │   │   ├── inngest/        # Inngest client and job definitions
 │   │   │   ├── client.ts
@@ -157,13 +157,15 @@ flowchart TD
 
 ---
 
-## 3. Data Storage & Schema (Prisma 8)
+## 3. Data Storage & Schema (Prisma 7)
 
-**Mandatory Prisma 8 Rules:**
+**Prisma 7 Architectural Standards:**
 
-- The schema MUST begin with `// use prisma-8`.
-- Do not use legacy `@db.*` types; write storage types in the type position.
-- Use `sql` tag for defaults, e.g., `@default(sql gen_random_uuid())`.
+- **Configuration:** Centrally configured via `prisma7.config.ts` using `defineConfig` and `env("DATABASE_URL")`.
+- **Driver Adapter:** Uses `@prisma/adapter-pg` driver adapter with `pg` pool to execute PostgreSQL queries safely.
+- **Schema Location:** `prisma/schema.prisma` with datasource provider `postgresql`.
+- **Primary Keys:** Cryptographic UUID identifiers `@default(uuid())`.
+- **Timestamps:** Standard `@default(now())` and `@updatedAt` decorators.
 
 ### Unified Schema Definition
 
@@ -265,7 +267,7 @@ To ensure the system meets banking-grade reliability standards, long-running or 
 
 1. **Phase 1: Foundation, Auth, & Edge Security**
    - ✅ Setup Next.js, Bun, Tailwind, Shadcn.
-   - Initialize Prisma 8, Supabase connection, and define the schema.
+   - Initialize Prisma 7, Supabase connection, and define the schema.
    - Implement Better Auth endpoints.
    - Set up Upstash Redis and integrate rate-limiting into `proxy.ts`.
 

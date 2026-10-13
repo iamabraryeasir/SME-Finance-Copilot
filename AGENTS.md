@@ -77,14 +77,12 @@ You are strictly confined to the following technologies. Do not introduce altern
 ### Data Layer
 
 - **Database:** PostgreSQL (Hosted on Supabase).
-- **ORM:** Prisma 8 (Strict Guidelines).
-  - **Version:** You MUST use the latest Prisma ORM 8 release candidate. 
-  - **Documentation Mandate:** Because Prisma 8 introduces fundamental architectural changes, you must search the internet for the official Prisma 8 documentation and syntax before generating schemas, running migrations, or configuring the client.
-  - **Known Prisma 8 Syntax Rules:**
-    - Every Prisma schema file must explicitly begin with the comment `// use prisma-8` on the very first line.
-    - `dbgenerated(...)` is deprecated; use the `sql` tag for database functions (e.g., `@default(sql gen_random_uuid())`).
-    - The configuration file (`prisma.config.ts`) must wrap its configuration using `definePrismaConfig`.
-    - Do not use the deprecated `@db.*` native-type attributes; write storage types in the type position (e.g., `Uuid` instead of `String @db.Uuid`).
+- **ORM:** Prisma 7 (`@prisma/client` and `prisma` CLI).
+  - **Version:** Stable Prisma 7 (v7.10.x).
+  - **Driver Adapter Architecture:** In Prisma 7, PostgreSQL connections use `@prisma/adapter-pg` driver adapter with `pg`.
+  - **Configuration:** Managed via `prisma7.config.ts` using `defineConfig` and `env` from `prisma/config`.
+  - **Schema Location:** `prisma/schema.prisma` with datasource provider `postgresql` (connection URL configured in `prisma7.config.ts`).
+  - **Tenant Isolation:** Enforce user/tenant isolation on every query, transaction, and state mutation. No unqualified reads/writes.
 
 ### Frontend & UI
 
