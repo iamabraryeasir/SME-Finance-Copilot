@@ -88,6 +88,8 @@ You are strictly confined to the following technologies. Do not introduce altern
 
 - **Styling:** Tailwind CSS (Relying on variables defined in `global.css`).
 - **Component Library:** Shadcn UI (Prompt the user to install components via `bunx --bun shadcn@latest add <component>` before implementation).
+- **Form Management & Validation:** TanStack Form (`@tanstack/react-form`) strictly validated with Zod schema validation for all user input forms.
+- **Notifications & Feedback:** `react-hot-toast` mounted at top-right for all user feedback, alert messages, and form state transitions.
 
 ### Ingestion Utilities
 

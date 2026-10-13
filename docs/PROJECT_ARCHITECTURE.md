@@ -121,7 +121,7 @@ flowchart TD
 ├── prisma7.config.ts       # Prisma 7 config using defineConfig
 ├── src/
 │   ├── app/
-│   │   ├── (auth)/         # /sign-in, /sign-up routes
+│   │   ├── (auth)/         # /sign-in, /sign-up routes (TanStack Form + Zod)
 │   │   ├── (dashboard)/    # /dashboard (User view)
 │   │   ├── (admin)/        # /admin (Admin monitoring view)
 │   │   └── api/            # Route Handlers
@@ -130,17 +130,20 @@ flowchart TD
 │   │       ├── ingest/route.ts         # CSV/PDF data parsing endpoint
 │   │       └── inngest/route.ts        # Inngest background job webhooks
 │   ├── components/
-│   │   ├── ui/             # Shadcn components (installed via bunx)
-│   │   └── shared/         # Custom composite components (charts, dropzones)
+│   │   ├── ui/             # Shadcn components (button, card, input, label)
+│   │   ├── shared/         # Custom composite components (charts, dropzones)
+│   │   └── toaster.tsx     # react-hot-toast client wrapper (top-right)
 │   ├── lib/
-│   │   ├── auth.ts         # Better Auth server instance
+│   │   ├── auth.ts         # Better Auth server instance (with admin plugin)
 │   │   ├── auth-client.ts  # Better Auth client instance
 │   │   ├── prisma.ts       # Prisma 7 client initialization (@prisma/adapter-pg)
+│   │   ├── seed-admin.ts   # Admin user seeding utility from .env credentials
 │   │   ├── redis.ts        # Upstash Redis client
 │   │   ├── inngest/        # Inngest client and job definitions
 │   │   │   ├── client.ts
 │   │   │   └── functions/  # E.g., process-invoice-batch, scheduled-forecasts
 │   │   └── ai/             # LangGraph state machine & tools definitions
+│   ├── instrumentation.ts  # Next.js server startup hook (runs admin seeding)
 │   └── proxy.ts            # Network boundary, role protection, & rate-limiting
 ```
 
@@ -266,9 +269,13 @@ To ensure the system meets banking-grade reliability standards, long-running or 
 ## 5. Implementation Strategy (Layer-by-Layer)
 
 1. **Phase 1: Foundation, Auth, & Edge Security**
-   - ✅ Setup Next.js, Bun, Tailwind, Shadcn.
-   - Initialize Prisma 7, Supabase connection, and define the schema.
-   - Implement Better Auth endpoints.
+   - ✅ Setup Next.js 16 (App Router), Bun, Tailwind v4, Shadcn UI.
+   - ✅ Initialize Prisma 7 with PostgreSQL adapter (`@prisma/adapter-pg`), synchronized schema models for Better Auth and Invoices.
+   - ✅ Better Auth implementation with Admin plugin, email/password authentication, and session handling.
+   - ✅ Route protection & Role-Based Access Control (RBAC) via `src/proxy.ts` (unauthenticated to `/sign-in`, users to `/dashboard`, admins to `/admin`).
+   - ✅ Admin user automatic seeding from `.env` (`ADMIN_EMAIL`, `ADMIN_PASSWORD`) via `src/instrumentation.ts` and `src/lib/seed-admin.ts`.
+   - ✅ Form state management via TanStack Form (`@tanstack/react-form`) with runtime Zod validation.
+   - ✅ Top-right toast notifications via `react-hot-toast`.
    - Set up Upstash Redis and integrate rate-limiting into `proxy.ts`.
 
 2. **Phase 2: Data Ingestion & Event-Driven Architecture**
