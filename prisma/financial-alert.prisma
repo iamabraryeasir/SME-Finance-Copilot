@@ -1,0 +1,28 @@
+// =============================================================================
+// Financial Alert Model (Rule-Based Risk Monitoring & Anomaly Detection)
+// =============================================================================
+
+model FinancialAlert {
+  id              String        @id @default(uuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title           String        // Succinct descriptive alert header
+  description     String        // Comprehensive root-cause explanation
+  severity        AlertSeverity // LOW | MEDIUM | HIGH | CRITICAL
+  category        AlertCategory // CASH_DEFICIT | BELOW_RESERVE | OVERDUE_RECEIVABLE, etc.
+  impactAmount    Float         // Financial exposure or deficit amount
+  relevantDate    DateTime      // Milestone or breach date
+  status          AlertStatus   @default(ACTIVE)
+  suggestedAction String        // Prescriptive next operational action
+  supportingData  Json?         // Structured array of driving invoice IDs and amounts
+  resolvedAt      DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([severity])
+  @@index([relevantDate])
+  @@map("FinancialAlert")
+}
+

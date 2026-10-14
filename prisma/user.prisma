@@ -1,0 +1,36 @@
+// =============================================================================
+// User Model (Better Auth & Tenancy Root)
+// =============================================================================
+
+model User {
+  id                 String              @id @default(uuid())
+  name               String
+  email              String              @unique
+  emailVerified      Boolean             @default(false)
+  image              String?
+  role               String?             @default("user") // 'admin' or 'user' (Better Auth Admin Plugin)
+  banned             Boolean?            @default(false)
+  banReason          String?
+  banExpires         DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  // Better Auth Relations
+  sessions           Session[]
+  accounts           Account[]
+
+  // Domain Relations
+  businessProfile    BusinessProfile?
+  recurringSchedules RecurringSchedule[]
+  telegramAccount    TelegramAccount?
+  invoices           Invoice[]
+  transactions       Transaction[]
+  alerts             FinancialAlert[]
+  actionDrafts       ActionDraft[]
+  documentUploads    DocumentUpload[]
+  auditLogs          AuditLog[]
+  conversations      Conversation[]
+
+  @@map("User")
+}
+

@@ -1,0 +1,30 @@
+// =============================================================================
+// Action Draft Model (Human-in-the-Loop Overdue Reminder Approval Pipeline)
+// =============================================================================
+
+model ActionDraft {
+  id               String               @id @default(uuid())
+  userId           String
+  user             User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoiceId        String
+  invoice          Invoice              @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  actionType       ActionDraftType      @default(INVOICE_REMINDER)
+  channel          CommunicationChannel @default(EMAIL)
+  recipientName    String               // Customer contact name
+  recipientContact String               // Target email, phone, or Telegram chat ID
+  subject          String               // Message subject line
+  content          String               // AI-drafted reminder body
+  status           ActionDraftStatus    @default(DRAFT)
+  approvedBy       String?              // User ID who confirmed approval
+  approvedAt       DateTime?
+  executedAt       DateTime?            // Dispatch timestamp
+  dispatchError    String?              // Failure reason if transmission failed
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  @@index([userId])
+  @@index([invoiceId])
+  @@index([status])
+  @@map("ActionDraft")
+}
+

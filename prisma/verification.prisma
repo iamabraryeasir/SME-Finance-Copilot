@@ -1,0 +1,16 @@
+// =============================================================================
+// Verification Model (Better Auth Email/Phone Verifications & OTPs)
+// =============================================================================
+
+model Verification {
+  id         String   @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("Verification")
+}
+

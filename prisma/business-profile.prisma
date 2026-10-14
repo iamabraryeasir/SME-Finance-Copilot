@@ -1,0 +1,22 @@
+// =============================================================================
+// Business Profile Model (Financial Settings & Operational Baseline)
+// =============================================================================
+
+model BusinessProfile {
+  id                        String   @id @default(uuid())
+  userId                    String   @unique
+  user                      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName               String
+  currency                  String   @default("BDT") // e.g. BDT (৳) or USD ($)
+  openingBalance            Float    @default(0)
+  openingBalanceDate        DateTime @default(now())
+  minReserveThreshold       Float    @default(50000)
+  latePaymentAssumptionDays Int      @default(7)
+  upcomingPaymentAlertDays  Int      @default(3)     // Alert window for upcoming supplier payables
+  expenseBaselineMonthly    Float?                   // Monthly baseline for unusual expense detection
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  @@map("BusinessProfile")
+}
+

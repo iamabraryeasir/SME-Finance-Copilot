@@ -1,0 +1,26 @@
+// =============================================================================
+// Document Upload Model (Ingestion Queue, OCR Pipeline & Uncertainty Gate)
+// =============================================================================
+
+model DocumentUpload {
+  id              String         @id @default(uuid())
+  userId          String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileName        String
+  fileType        DocumentType   // CSV | PDF | IMAGE
+  fileUrl         String         // Storage path or URI
+  source          DocumentSource @default(WEB) // WEB | TELEGRAM
+  telegramFileId  String?        // Telegram attachment identifier
+  status          DocumentStatus @default(PENDING)
+  confidenceScore Float?         // OCR confidence score (0.00 - 1.00)
+  extractedData   Json?          // Normalized JSON extraction payload
+  errorReport     Json?          // Structured validation report (row, column, reason)
+  invoices        Invoice[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@map("DocumentUpload")
+}
+

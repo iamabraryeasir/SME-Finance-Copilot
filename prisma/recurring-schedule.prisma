@@ -1,0 +1,25 @@
+// =============================================================================
+// Recurring Schedule Model (Fixed Commitments: Rent, Payroll, Loans)
+// =============================================================================
+
+model RecurringSchedule {
+  id           String              @id @default(uuid())
+  userId       String
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String              // e.g. "Office Rent", "Staff Payroll", "Term Loan"
+  category     TransactionCategory
+  amount       Float
+  currency     String              @default("BDT")
+  frequency    ScheduleFrequency   @default(MONTHLY)
+  dayOfMonth   Int                 // Execution day (1-31)
+  nextDueDate  DateTime
+  isActive     Boolean             @default(true)
+  transactions Transaction[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([nextDueDate])
+  @@map("RecurringSchedule")
+}
+

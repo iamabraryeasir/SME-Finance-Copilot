@@ -1,0 +1,20 @@
+// =============================================================================
+// Session Model (Better Auth Stateful Sessions)
+// =============================================================================
+
+model Session {
+  id             String   @id @default(uuid())
+  expiresAt      DateTime
+  token          String   @unique
+  ipAddress      String?
+  userAgent      String?
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  impersonatedBy String?  // Better Auth Admin Plugin
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId])
+  @@map("Session")
+}
+

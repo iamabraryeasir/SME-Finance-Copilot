@@ -166,7 +166,9 @@ The relational architecture is modeled to support strict multi-tenant isolation,
 ```mermaid
 erDiagram
   User ||--o{ Session : "authenticates"
-  User ||--o{ Account : "links"
+  User ||--o{ Account : "links credentials/OAuth"
+  User ||--|| BusinessProfile : "owns financial settings"
+  User ||--o{ RecurringSchedule : "defines fixed overhead commitments"
   User ||--o{ TelegramAccount : "links omni-channel identity"
   User ||--o{ Invoice : "owns ledger records"
   User ||--o{ Transaction : "records cash movements"
@@ -180,6 +182,7 @@ erDiagram
   Invoice ||--o{ Transaction : "reconciles payments against"
   Invoice ||--o{ ActionDraft : "generates reminder drafts for"
   DocumentUpload ||--o{ Invoice : "extracts structured records into"
+  RecurringSchedule ||--o{ Transaction : "generates projected cash outflows for"
 
   User {
     String id PK "UUID cryptographic primary key"
@@ -188,16 +191,41 @@ erDiagram
     Boolean emailVerified "Email validation flag"
     String image "Avatar URL"
     String role "RBAC: admin | user"
-    String companyName "Registered SME business legal name"
-    String currency "Default operational currency (e.g. BDT, USD)"
-    Float openingBalance "Verified starting cash balance"
-    Float minReserveThreshold "Configured minimum safety reserve buffer"
-    Int latePaymentAssumptionDays "Conservative delay buffer for receivables"
     Boolean banned "Administrative ban status"
     String banReason "Justification for ban"
     DateTime banExpires "Ban expiry timestamp"
     DateTime createdAt "Record creation timestamp"
     DateTime updatedAt "Last modification timestamp"
+  }
+
+  BusinessProfile {
+    String id PK "UUID"
+    String userId FK "Unique 1:1 relation to User"
+    String companyName "Registered SME business legal name"
+    String currency "Default operational currency (e.g. BDT ৳, USD $)"
+    Float openingBalance "Current verified starting cash balance"
+    DateTime openingBalanceDate "Date opening balance was established"
+    Float minReserveThreshold "Configured minimum safety reserve buffer"
+    Int latePaymentAssumptionDays "Conservative delay buffer for receivables"
+    Int upcomingPaymentAlertDays "Horizon for supplier payment alerts (default 3 days)"
+    Float expenseBaselineMonthly "Historical baseline for unusual expense detection"
+    DateTime createdAt "Profile creation timestamp"
+    DateTime updatedAt "Last profile update"
+  }
+
+  RecurringSchedule {
+    String id PK "UUID"
+    String userId FK "Indexed relation to User"
+    String title "Schedule name (e.g. Office Rent, Staff Payroll, Bank Loan)"
+    String category "RENT | PAYROLL | LOAN_REPAYMENT | UTILITIES | TAX | OTHER"
+    Float amount "Scheduled recurring cash commitment"
+    String currency "Currency code"
+    String frequency "MONTHLY | WEEKLY | BIWEEKLY | QUARTERLY | ANNUALLY"
+    Int dayOfMonth "Scheduled execution day (e.g. 1st or 28th)"
+    DateTime nextDueDate "Next calculated obligation maturity date"
+    Boolean isActive "Active scheduling flag"
+    DateTime createdAt "Schedule creation timestamp"
+    DateTime updatedAt "Schedule update timestamp"
   }
 
   Session {
@@ -228,13 +256,23 @@ erDiagram
     DateTime updatedAt "Update timestamp"
   }
 
+  Verification {
+    String id PK "UUID"
+    String identifier "Target email or phone verification identifier"
+    String value "Hashed verification token or OTP secret"
+    DateTime expiresAt "Absolute token expiration timestamp"
+    DateTime createdAt "Record creation timestamp"
+    DateTime updatedAt "Last modification timestamp"
+  }
+
   TelegramAccount {
     String id PK "UUID"
-    String userId FK "Indexed relation to User"
+    String userId FK "Unique 1:1 relation to User"
     String telegramUserId UK "Telegram unique numeric user ID"
     String telegramUsername "Telegram handle (@username)"
     String chatId "Active conversation chat ID"
     String linkToken "One-time cryptographically secure verification PIN"
+    DateTime linkTokenExpiresAt "Expiry for pairing PIN (15 min window)"
     Boolean isVerified "Channel authorization status"
     DateTime linkedAt "Timestamp when linking was verified"
     DateTime createdAt "Creation timestamp"
@@ -246,16 +284,18 @@ erDiagram
     String userId FK "Indexed relation to User"
     String invoiceNumber "Unique business invoice code (e.g. INV-2026-001)"
     String counterparty "Customer name (AR) or Supplier name (AP)"
+    String counterpartyEmail "Customer or supplier billing email"
+    String counterpartyPhone "Customer or supplier contact phone"
     String type "RECEIVABLE (incoming) | PAYABLE (outgoing)"
-    Float totalAmount "Total gross invoiced amount"
-    Float paidAmount "Sum of settled/reconciled payments"
-    Float remainingAmount "Calculated outstanding liability"
+    Float totalAmount "Total gross invoiced liability"
+    Float paidAmount "Cumulative settled amount (handles partial payments)"
+    Float remainingAmount "Outstanding balance (indexed for queries)"
     String currency "Transaction ISO currency code"
     DateTime issueDate "Invoice creation/billing date"
     DateTime dueDate "Agreed settlement due date"
     String status "PENDING | PARTIALLY_PAID | OVERDUE | PAID | CANCELLED"
     String source "WEB_CSV | WEB_UPLOAD | TELEGRAM | MANUAL"
-    String documentUploadId FK "Optional link to source upload artifact"
+    String documentUploadId FK "Optional FK linking to source document"
     DateTime lastReminderSentAt "Timestamp of most recent customer reminder"
     DateTime createdAt "Creation timestamp"
     DateTime updatedAt "Update timestamp"
@@ -265,13 +305,14 @@ erDiagram
     String id PK "UUID"
     String userId FK "Indexed relation to User"
     String invoiceId FK "Optional FK linking transaction to Invoice"
+    String recurringScheduleId FK "Optional FK linking to RecurringSchedule"
     String type "INFLOW (cash in) | OUTFLOW (cash out)"
-    String category "RECEIPT | SUPPLIER_PAYMENT | RENT | PAYROLL | LOAN | TAX | OTHER"
+    String category "CUSTOMER_RECEIPT | SUPPLIER_PAYMENT | RENT | PAYROLL | LOAN | TAX | OTHER"
     Float amount "Absolute cash movement value"
     String currency "Transaction currency"
     DateTime transactionDate "Execution or scheduled transaction date"
     String description "Clear ledger narrative description"
-    Boolean isProjected "True if future expectation, False if reconciled bank record"
+    Boolean isProjected "True if future expectation, False if verified bank entry"
     DateTime createdAt "Creation timestamp"
     DateTime updatedAt "Update timestamp"
   }
@@ -285,9 +326,10 @@ erDiagram
     String category "CASH_DEFICIT | BELOW_RESERVE | OVERDUE_RECEIVABLE | UPCOMING_PAYABLE | UNUSUAL_EXPENSE"
     Float impactAmount "Estimated total financial liability or shortfall"
     DateTime relevantDate "Date when event triggers or matures"
-    String status "ACTIVE | RESOLVED | DISMISSED"
+    String status "ACTIVE | ACKNOWLEDGED | RESOLVED | DISMISSED"
     String suggestedAction "Specific next operational action"
     Json supportingData "Structured JSON payload of driving invoices/transactions"
+    DateTime resolvedAt "Timestamp when risk was resolved"
     DateTime createdAt "Creation timestamp"
     DateTime updatedAt "Update timestamp"
   }
@@ -298,10 +340,11 @@ erDiagram
     String invoiceId FK "Target invoice relation"
     String actionType "INVOICE_REMINDER | SUPPLIER_PAYMENT_SCHEDULE | EXPENSE_DISPUTE"
     String channel "EMAIL | TELEGRAM | SMS"
-    String recipient "Recipient contact identifier"
+    String recipientName "Customer contact name"
+    String recipientContact "Target email, phone, or Telegram chat identifier"
     String subject "Message subject header"
     String content "Generated reminder or communication copy"
-    String status "DRAFT | PENDING_APPROVAL | APPROVED | REJECTED | EXECUTED"
+    String status "DRAFT | PENDING_APPROVAL | APPROVED | REJECTED | SENT | FAILED"
     String approvedBy "User ID who granted explicit approval"
     DateTime approvedAt "Approval grant timestamp"
     DateTime executedAt "Dispatch or delivery timestamp"
@@ -318,7 +361,7 @@ erDiagram
     String fileUrl "Encrypted storage URI / path"
     String source "WEB | TELEGRAM"
     String telegramFileId "Telegram remote file ID if received via bot"
-    String status "PENDING | PROCESSING | EXTRACTED | NEEDS_CONFIRMATION | FAILED | COMPLETED"
+    String status "PENDING | PROCESSING | EXTRACTED | NEEDS_CONFIRMATION | CONFIRMED | FAILED"
     Float confidenceScore "OCR / extraction confidence score (0.00 - 1.00)"
     Json extractedData "Normalized JSON extraction payload"
     Json errorReport "Validation errors breakdown by row and column"
@@ -331,7 +374,7 @@ erDiagram
     String userId FK "Indexed relation to User"
     String actor "USER | AGENT | SYSTEM | TELEGRAM"
     String actionType "INGESTION | FORECAST_RUN | ALERT_TRIGGER | DRAFT_CREATED | DRAFT_APPROVED | DISPATCH"
-    String entityType "Invoice | Transaction | ActionDraft | FinancialAlert | Setting"
+    String entityType "Invoice | Transaction | ActionDraft | FinancialAlert | BusinessProfile"
     String entityId "Target entity UUID"
     Json details "Structured mutation metadata and state delta"
     String status "SUCCESS | FAILED | PENDING_APPROVAL"
@@ -344,6 +387,7 @@ erDiagram
     String userId FK "Indexed relation to User"
     String channel "WEB | TELEGRAM"
     String title "Summary conversation title"
+    Json workflowState "Active multi-step workflow context and temporary intent memory"
     DateTime createdAt "Session start"
     DateTime updatedAt "Last message timestamp"
   }
@@ -358,6 +402,61 @@ erDiagram
     DateTime createdAt "Message timestamp"
   }
 ```
+
+### 4.1 Better Auth Integration Architecture & Merging Strategy
+
+The ERD is specifically engineered to merge seamlessly with **Better Auth** using a zero-friction, modular architecture:
+
+```mermaid
+flowchart TD
+  subgraph BetterAuthBoundary["Better Auth Managed Boundary (Prisma Adapter)"]
+    User["User Model\n(Identity, Profile & additionalFields)"]
+    Session["Session Model\n(Tokens, Expirations, impersonatedBy)"]
+    Account["Account Model\n(Credentials, Hashes, OAuth tokens)"]
+    Verification["Verification Model\n(Email confirmation & OTPs)"]
+    
+    User -->|1:N| Session
+    User -->|1:N| Account
+  end
+
+  subgraph DomainBoundary["CashPilot Financial Domain (Prisma Relations)"]
+    Invoice["Invoice Ledger (AR / AP)"]
+    Transaction["Cash Movements (Inflows/Outflows)"]
+    Alert["Financial Alerts (Risk Engine)"]
+    ActionDraft["Action Drafts (HITL Planner)"]
+    DocUpload["Document Uploads (CSV/PDF OCR)"]
+    AuditLog["Audit Log (Security Compliance)"]
+    Telegram["Telegram Account (Omni-Channel Link)"]
+    Chat["Conversation & Messages (Copilot State)"]
+  end
+
+  User -->|userId FK| Invoice
+  User -->|userId FK| Transaction
+  User -->|userId FK| Alert
+  User -->|userId FK| ActionDraft
+  User -->|userId FK| DocUpload
+  User -->|userId FK| AuditLog
+  User -->|userId FK| Telegram
+  User -->|userId FK| Chat
+```
+
+#### How the Schema Coexists with Better Auth:
+
+1. **Zero-Conflict Table Segregation:**
+   - Better Auth's `@better-auth/prisma-adapter` strictly queries and manages its core quartet: `User`, `Session`, `Account`, and `Verification`.
+   - Domain tables (`Invoice`, `Transaction`, `FinancialAlert`, `ActionDraft`, `DocumentUpload`, `AuditLog`, `TelegramAccount`, `Conversation`, `Message`) link to `User.id` via standard PostgreSQL foreign keys (`userId`). Better Auth ignores these domain tables, while Prisma enforces cascade deletion and referential integrity.
+
+2. **Custom SME Fields via Better Auth's `user.additionalFields`:**
+   - Rather than requiring an extra join to a separate settings table, business-critical settings (`companyName`, `currency`, `openingBalance`, `minReserveThreshold`, `latePaymentAssumptionDays`) are declared in `src/lib/auth.ts` under `user.additionalFields`.
+   - **Performance Benefit:** Better Auth automatically includes these fields inside `session.user` returned by `useSession()` on the client and `auth.api.getSession()` on the server. The entire dashboard receives the SME's currency symbol (`৳` or `$`), opening balance, and reserve threshold without issuing secondary database round-trips.
+
+3. **Admin Plugin Integration:**
+   - Better Auth's official `admin` plugin extends `User` with `role`, `banned`, `banReason`, and `banExpires`, and `Session` with `impersonatedBy`.
+   - The route interception proxy (`src/proxy.ts`) reads `session.user.role` directly to enforce role-based access control (RBAC), routing admins to `/admin` and regular users to `/dashboard`.
+
+4. **Omni-Channel Telegram Identity Bridge:**
+   - The `TelegramAccount` entity stores the mapping between a verified `telegramUserId` and the Better Auth `User.id`.
+   - When a user interacts with the Telegram bot (e.g., uploading an invoice PDF or requesting a forecast), the Telegram webhook resolves the user's `userId` via `TelegramAccount` and passes this identical context to the financial calculation engines and LangGraph agent tools. Both Web and Telegram share the exact same user identity, database records, and permissions.
 
 ---
 

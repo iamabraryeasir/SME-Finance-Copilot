@@ -1,0 +1,29 @@
+// =============================================================================
+// Transaction Model (Historical Ledger & Projected Cash Movements)
+// =============================================================================
+
+model Transaction {
+  id                  String              @id @default(uuid())
+  userId              String
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoiceId           String?
+  invoice             Invoice?            @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  recurringScheduleId String?
+  recurringSchedule   RecurringSchedule?  @relation(fields: [recurringScheduleId], references: [id], onDelete: SetNull)
+  type                TransactionType     // INFLOW | OUTFLOW
+  category            TransactionCategory // RECEIPT, SUPPLIER_PAYMENT, RENT, PAYROLL, etc.
+  amount              Float
+  currency            String              @default("BDT")
+  transactionDate     DateTime            // Realized or scheduled execution date
+  description         String
+  isProjected         Boolean             @default(false) // True if future projection, False if bank-reconciled
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([transactionDate])
+  @@index([category])
+  @@index([isProjected])
+  @@map("Transaction")
+}
+

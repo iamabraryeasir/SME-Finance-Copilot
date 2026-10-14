@@ -1,0 +1,22 @@
+// =============================================================================
+// Telegram Account Model (Omni-Channel Identity & Bot Linking)
+// =============================================================================
+
+model TelegramAccount {
+  id                 String    @id @default(uuid())
+  userId             String    @unique
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  telegramUserId     String    @unique
+  telegramUsername   String?
+  chatId             String
+  linkToken          String?   // One-time 6-digit cryptographic pairing PIN
+  linkTokenExpiresAt DateTime? // PIN expiry window (15 mins)
+  isVerified         Boolean   @default(false)
+  linkedAt           DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([chatId])
+  @@map("TelegramAccount")
+}
+

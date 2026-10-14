@@ -1,0 +1,40 @@
+// =============================================================================
+// Invoice Model (Accounts Receivable & Accounts Payable Ledger)
+// =============================================================================
+
+model Invoice {
+  id                 String          @id @default(uuid())
+  userId             String
+  user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoiceNumber      String
+  counterparty       String          // Customer name (AR) or Supplier name (AP)
+  counterpartyEmail  String?         // Contact email for follow-up reminders
+  counterpartyPhone  String?         // Contact phone for follow-up reminders
+  type               InvoiceType     // RECEIVABLE | PAYABLE
+  totalAmount        Float           // Total gross invoiced liability
+  paidAmount         Float           @default(0) // Settled amount (partial payments)
+  remainingAmount    Float           // Outstanding balance (indexed for speed)
+  currency           String          @default("BDT")
+  issueDate          DateTime
+  dueDate            DateTime
+  status             InvoiceStatus   @default(PENDING)
+  source             InvoiceSource   @default(MANUAL)
+  documentUploadId   String?
+  documentUpload     DocumentUpload? @relation(fields: [documentUploadId], references: [id], onDelete: SetNull)
+  lastReminderSentAt DateTime?
+
+  // Relations
+  transactions       Transaction[]
+  actionDrafts       ActionDraft[]
+
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@unique([userId, invoiceNumber])
+  @@index([userId])
+  @@index([dueDate])
+  @@index([status])
+  @@index([remainingAmount])
+  @@map("Invoice")
+}
+

@@ -1,0 +1,33 @@
+// =============================================================================
+// Conversation & Message Models (Omni-Channel Copilot Memory & State)
+// =============================================================================
+
+model Conversation {
+  id            String              @id @default(uuid())
+  userId        String
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channel       ConversationChannel @default(WEB) // WEB | TELEGRAM
+  title         String
+  workflowState Json?               // Active multi-step workflow context & temporary intent memory
+  messages      Message[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([userId])
+  @@map("Conversation")
+}
+
+model Message {
+  id             String        @id @default(uuid())
+  conversationId String
+  conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         MessageSender // USER | ASSISTANT | SYSTEM
+  content        String
+  toolCalls      Json?         // Invoked tool names and parameter payloads
+  toolResults    Json?         // Deterministic tool responses and errors
+  createdAt      DateTime      @default(now())
+
+  @@index([conversationId])
+  @@map("Message")
+}
+

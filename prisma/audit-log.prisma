@@ -1,0 +1,23 @@
+// =============================================================================
+// Audit Log Model (Immutable Security & Compliance Activity Trail)
+// =============================================================================
+
+model AuditLog {
+  id         String      @id @default(uuid())
+  userId     String
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  actor      AuditActor  // USER | AGENT | SYSTEM | TELEGRAM
+  actionType AuditAction // INGESTION, FORECAST_RUN, ALERT_TRIGGER, etc.
+  entityType String      // "Invoice", "Transaction", "ActionDraft", etc.
+  entityId   String?     // UUID of the affected entity
+  details    Json        // State delta and execution metadata
+  status     AuditStatus @default(SUCCESS)
+  ipAddress  String?     // Client or webhook origin IP
+  createdAt  DateTime    @default(now()) // Immutable timestamp
+
+  @@index([userId])
+  @@index([actionType])
+  @@index([createdAt])
+  @@map("AuditLog")
+}
+

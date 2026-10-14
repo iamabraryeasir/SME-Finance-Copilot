@@ -1,0 +1,146 @@
+// =============================================================================
+// CashPilot AI: Global Domain Enums
+// =============================================================================
+
+enum InvoiceType {
+  RECEIVABLE
+  PAYABLE
+}
+
+enum InvoiceStatus {
+  PENDING
+  PARTIALLY_PAID
+  OVERDUE
+  PAID
+  CANCELLED
+}
+
+enum InvoiceSource {
+  WEB_CSV
+  WEB_UPLOAD
+  TELEGRAM
+  MANUAL
+}
+
+enum TransactionType {
+  INFLOW
+  OUTFLOW
+}
+
+enum TransactionCategory {
+  CUSTOMER_RECEIPT
+  SUPPLIER_PAYMENT
+  RENT
+  PAYROLL
+  LOAN_REPAYMENT
+  UTILITIES
+  TAX
+  OTHER
+}
+
+enum ScheduleFrequency {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  QUARTERLY
+  ANNUALLY
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AlertCategory {
+  CASH_DEFICIT
+  BELOW_RESERVE
+  OVERDUE_RECEIVABLE
+  UPCOMING_PAYABLE
+  UNUSUAL_EXPENSE
+}
+
+enum AlertStatus {
+  ACTIVE
+  ACKNOWLEDGED
+  RESOLVED
+  DISMISSED
+}
+
+enum ActionDraftType {
+  INVOICE_REMINDER
+  SUPPLIER_PAYMENT_SCHEDULE
+  EXPENSE_DISPUTE
+}
+
+enum ActionDraftStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  SENT
+  FAILED
+}
+
+enum CommunicationChannel {
+  EMAIL
+  TELEGRAM
+  SMS
+}
+
+enum DocumentType {
+  CSV
+  PDF
+  IMAGE
+}
+
+enum DocumentSource {
+  WEB
+  TELEGRAM
+}
+
+enum DocumentStatus {
+  PENDING
+  PROCESSING
+  EXTRACTED
+  NEEDS_CONFIRMATION
+  CONFIRMED
+  FAILED
+}
+
+enum AuditActor {
+  USER
+  AGENT
+  SYSTEM
+  TELEGRAM
+}
+
+enum AuditAction {
+  INGESTION
+  FORECAST_RUN
+  ALERT_TRIGGER
+  DRAFT_CREATED
+  DRAFT_APPROVED
+  DRAFT_REJECTED
+  DISPATCH
+  SETTINGS_UPDATED
+}
+
+enum AuditStatus {
+  SUCCESS
+  FAILED
+  PENDING_APPROVAL
+}
+
+enum ConversationChannel {
+  WEB
+  TELEGRAM
+}
+
+enum MessageSender {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
