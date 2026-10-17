@@ -61,7 +61,13 @@ export async function proxy(request: NextRequest) {
   const userRole = session?.user?.role || "user";
 
   const isAuthPage = pathname === "/sign-in" || pathname === "/sign-up";
-  const isDashboardPage = pathname.startsWith("/dashboard");
+  const isDashboardPage =
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/invoices") ||
+    pathname.startsWith("/forecast") ||
+    pathname.startsWith("/alerts") ||
+    pathname.startsWith("/copilot") ||
+    pathname.startsWith("/settings");
   const isAdminPage = pathname.startsWith("/admin");
 
   // 3. Authenticated user attempting to visit login/registration -> redirect to role dashboard

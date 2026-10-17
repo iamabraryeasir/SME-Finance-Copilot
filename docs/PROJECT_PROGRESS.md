@@ -39,7 +39,7 @@ flowchart LR
 > **Core Objective:** Multi-channel financial data ingestion (Web & Telegram), zero-trust validation, OCR extraction, deduplication, and automatic recalculation triggers.
 
 - [x] **Database Schema Deployment:** All CashPilot ERD models and enums deployed to PostgreSQL (`User`, `BusinessProfile`, `RecurringSchedule`, `Invoice`, `Transaction`, `FinancialAlert`, `ActionDraft`, `DocumentUpload`, `AuditLog`, `TelegramAccount`, `Conversation`, `Message`).
-- [ ] **Business Profile & Settings Service:** Initialize and manage SME financial settings (operational currency `৳`/`$`, opening cash balance, safety reserve threshold, late payment delay buffer).
+- [x] **Business Profile & Settings Service:** Initialize and manage SME financial settings (operational currency `৳`/`$`, opening cash balance, safety reserve threshold, late payment delay buffer).
 - [ ] **CSV Ingestion Route:** Endpoint (`/api/ingest/csv`) parsing streams via `papaparse` with accounts receivable (AR) and accounts payable (AP) Zod schemas.
 - [ ] **Deduplication Engine:** Ingestion hash calculation (`hash(userId, invoiceNumber, counterparty, totalAmount)`) to prevent duplicate ledger entries.
 - [ ] **Structured Error Reporting:** Detailed row-by-row and column validation failure reports (fail-closed, no silent drops).
