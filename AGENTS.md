@@ -111,6 +111,19 @@ You are strictly confined to the following technologies. Do not introduce altern
 
 - **Data Parsing:** `papaparse` (for structured CSV data) and `pdf-parse` (for raw PDF extraction).
 
+### Cache, Rate Limiting & Asynchronous Workers
+
+- **Redis & Rate Limiting:** `@upstash/redis` and `@upstash/ratelimit`.
+  - **Singleton Location:** `src/lib/redis.ts` initialized from `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`.
+  - **Edge Rate Limiting:** Enforce sliding-window rate limiting in `src/proxy.ts` on all incoming requests to mitigate DDoS and API abuse.
+  - **Idempotency & Session Caching:** Use Redis for storing idempotency keys (deduplication hashes for CSV/invoice ingestion) and transient agent conversation states.
+  - **Safety Constraint:** Redis is strictly a cache and rate limiter. All persistent ledgers, invoices, transactions, and audit records MUST reside in PostgreSQL.
+- **Asynchronous Execution & Cron Jobs:** `inngest`.
+  - **Client Location:** `src/lib/inngest-client.ts` (`new Inngest({ id: "cashpilot-ai" })`).
+  - **Function Definitions:** `src/lib/inngest/functions/` (e.g. `ocr-worker.ts`, `scheduled-forecasts.ts`).
+  - **Route Handler:** `src/app/api/inngest/route.ts` mounted via `serve({ client, functions })`.
+  - **Mandatory Usage:** Heavy or failure-prone tasks (batch PDF/Image OCR extraction, nightly 30-day forecast recalculations, and customer reminder message dispatch) MUST be offloaded to Inngest background functions. Never block Next.js route handlers with heavy synchronous background loops.
+
 ### LLM Providers & Cost Constraints (Strictly Free Tiers)
 
 - **Primary LLM:** Google Gemini 1.5 Flash (via `@google/generative-ai` or `@langchain/google-genai`).
