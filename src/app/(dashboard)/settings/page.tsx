@@ -15,7 +15,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { updateBusinessProfileSchema } from "@/lib/validations/business-profile";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { updateBusinessProfileSchema } from "@/validations/business-profile";
 
 interface ProfileData {
   companyName: string;
@@ -37,7 +44,7 @@ export default function SettingsPage() {
         const res = await fetch("/api/profile");
         if (!res.ok) throw new Error("Failed to load business profile");
         const data = await res.json();
-        setProfile(data.profile);
+        setProfile(data.data?.profile ?? data.profile);
       } catch (err: unknown) {
         const msg =
           err instanceof Error ? err.message : "Failed to load settings";
@@ -195,23 +202,48 @@ function SettingsForm({ initialData }: { initialData: ProfileData | null }) {
                   <Label htmlFor={field.name} className="text-xs font-medium">
                     Operational Currency
                   </Label>
-                  <select
-                    id={field.name}
-                    name={field.name}
+                  <Select
                     value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) =>
-                      field.handleChange(
-                        e.target.value as "BDT" | "USD" | "EUR" | "GBP",
-                      )
-                    }
-                    className="flex h-9 w-full rounded-md border border-input bg-background/50 px-3 py-1.5 text-xs shadow-2xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring font-medium"
+                    onValueChange={(val) => {
+                      if (val) {
+                        field.handleChange(
+                          val as "BDT" | "USD" | "EUR" | "GBP",
+                        );
+                      }
+                    }}
                   >
-                    <option value="BDT">BDT (৳) — Bangladeshi Taka</option>
-                    <option value="USD">USD ($) — US Dollar</option>
-                    <option value="EUR">EUR (€) — Euro</option>
-                    <option value="GBP">GBP (£) — British Pound</option>
-                  </select>
+                    <SelectTrigger
+                      id={field.name}
+                      className="h-9 w-full text-xs bg-background/50 border-input font-medium"
+                    >
+                      <SelectValue placeholder="Select currency">
+                        {(val) => {
+                          switch (val) {
+                            case "BDT":
+                              return "BDT (৳) — Bangladeshi Taka";
+                            case "USD":
+                              return "USD ($) — US Dollar";
+                            case "EUR":
+                              return "EUR (€) — Euro";
+                            case "GBP":
+                              return "GBP (£) — British Pound";
+                            default:
+                              return val;
+                          }
+                        }}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="BDT">
+                        BDT (৳) — Bangladeshi Taka
+                      </SelectItem>
+                      <SelectItem value="USD">USD ($) — US Dollar</SelectItem>
+                      <SelectItem value="EUR">EUR (€) — Euro</SelectItem>
+                      <SelectItem value="GBP">
+                        GBP (£) — British Pound
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
             </form.Field>

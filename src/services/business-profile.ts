@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { UpdateBusinessProfileInput } from "@/lib/validations/business-profile";
+import type { UpdateBusinessProfileInput } from "@/validations/business-profile";
 
 /**
  * Retrieves the business profile for a specific user tenant.

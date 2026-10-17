@@ -17,6 +17,7 @@ flowchart LR
 ---
 
 ## Phase 1: Foundation, Security Boundary & Authentication Architecture
+
 > **Core Objective:** Establish the edge boundary, stateful multi-role session management, database layer, and UI component foundations.
 
 - [x] **Runtime & Package Management:** Next.js 16 App Router on `bun` with script pipeline (`dev`, `build`, `lint`, `format`, `db:*`).
@@ -36,28 +37,33 @@ flowchart LR
 ---
 
 ## Phase 2: Data Ingestion & Multi-Format Validation Pipeline (Feature 1)
+
 > **Core Objective:** Multi-channel financial data ingestion (Web & Telegram), zero-trust validation, OCR extraction, deduplication, and automatic recalculation triggers.
 
 - [x] **Database Schema Deployment:** All CashPilot ERD models and enums deployed to PostgreSQL (`User`, `BusinessProfile`, `RecurringSchedule`, `Invoice`, `Transaction`, `FinancialAlert`, `ActionDraft`, `DocumentUpload`, `AuditLog`, `TelegramAccount`, `Conversation`, `Message`).
 - [x] **Business Profile & Settings Service:** Initialize and manage SME financial settings (operational currency `৳`/`$`, opening cash balance, safety reserve threshold, late payment delay buffer).
-- [ ] **CSV Ingestion Route:** Endpoint (`/api/ingest/csv`) parsing streams via `papaparse` with accounts receivable (AR) and accounts payable (AP) Zod schemas.
-- [ ] **Deduplication Engine:** Ingestion hash calculation (`hash(userId, invoiceNumber, counterparty, totalAmount)`) to prevent duplicate ledger entries.
-- [ ] **Structured Error Reporting:** Detailed row-by-row and column validation failure reports (fail-closed, no silent drops).
+- [x] **CSV Ingestion Route:** Endpoint (`/api/ingest/csv`) parsing in-memory via `papaparse` with accounts receivable (AR) and accounts payable (AP) Zod schemas.
+- [x] **Deduplication Engine:** Ingestion hash calculation (`hash(userId, invoiceNumber, counterparty, totalAmount)`) and database ledger checks preventing duplicate entries.
+- [x] **Structured Error Reporting:** Detailed row-by-row and column validation failure reports (fail-closed, no silent drops).
 - [ ] **Inngest Background Worker Setup:** Inngest client and webhook handler (`/api/inngest`) for durable asynchronous execution.
 - [ ] **Document OCR Extraction Worker:** Inngest background job extracting invoices from PDFs/images using Node-native parsing (`pdf-parse`).
 - [ ] **OCR Uncertainty Review Gate:** Flagging extractions with confidence $< 0.85$ as `NEEDS_CONFIRMATION` to stage raw data before ledger persistence.
-- [ ] **Multi-Format Upload Dropzone:** Drag-and-drop web UI with live MIME-type checks and validation error dialogs.
+- [x] **Multi-Format Upload Dropzone:** Drag-and-drop web UI with live MIME-type checks, single-CSV rule enforcement, batch PDF/image support, and validation error breakdown.
+- [x] **Human-in-the-Loop (HITL) Ingestion Review:** Staging modal previewing parsed AR/AP records, live totals, selective inclusion, duplicate alerts, and user confirmation before DB write.
+- [x] **Enterprise API Response Standardization:** Enterprise `ApiResponse` wrapper across all endpoints enforcing strict envelope (`success`, `statusCode`, `message`, `data`, `errors`, `meta`, `timestamp`).
+- [x] **Monthly Ledger Maintenance & Deletion:** Month-based filtering (`YYYY-MM`), batch and single invoice deletion with cascading transaction cleanup and audit trail.
 - [ ] **Metric Recalculation Trigger:** Automatic event dispatch to recalculate financial summary, overdue list, and cash-flow projections upon successful ingestion.
 
 ---
 
 ## Phase 3: Deterministic Financial Engines & Risk Alerting (Features 2 & 3)
+
 > **Core Objective:** Pure TypeScript mathematical calculation engines for 30-day cash flow projection, what-if scenario testing, and rule-based risk alerts.
 
 - [ ] **30-Day Cash-Flow Forecasting Engine:** Deterministic calculation module ($Balance(t) = Balance(t-1) + Inflows(t) - Outflows(t)$) in pure TypeScript.
 - [ ] **Conservative Late Receipt Modeling:** Applying user-configured delay buffers ($\text{Due Date} + \Delta_{\text{late}}$) to expected receivables.
 - [ ] **Recurring Overhead Scheduling:** Projecting `RecurringSchedule` commitments (Rent, Payroll, Loan Repayments) on their scheduled day of the month.
-- [ ] **What-If Affordability Simulator:** Scenario simulation engine testing hypothetical purchases (e.g. *"Can I afford ৳200,000 of inventory on Day 5?"*) against the 30-day timeline.
+- [ ] **What-If Affordability Simulator:** Scenario simulation engine testing hypothetical purchases (e.g. _"Can I afford ৳200,000 of inventory on Day 5?"_) against the 30-day timeline.
 - [ ] **Deficit & Low-Cash Period Detection:** Flagging dates where balances breach the safety reserve or drop into negative territory.
 - [ ] **Rule-Based Intelligent Alerts Engine:** Evaluating the 5 core deterministic rules:
   1. Projected cash deficit (negative balance).
@@ -72,6 +78,7 @@ flowchart LR
 ---
 
 ## Phase 4: Agentic Copilot, Tool Layer & Omni-Channel Telegram Bot (Features 4 & 5)
+
 > **Core Objective:** Multi-step LangGraph agent orchestrator, 8 deterministic backend tools, Human-in-the-Loop action planner, and shared Telegram bot.
 
 - [ ] **LLM Provider Bridge:** Google Gemini 1.5 Flash (primary via `@langchain/google-genai`) with Groq Llama-3 failover (`@langchain/groq`).
@@ -97,15 +104,15 @@ flowchart LR
 ---
 
 ## Phase 5: Enterprise UI/UX Dashboard, Generative UI & Production Hardening (Feature 6)
+
 > **Core Objective:** High-density 6-section command center, Generative UI chat widgets, interactive HITL approval modals, and production audits.
 
 - [ ] **Section 1: Financial Overview:** 6 KPI metric cards with real-time figures, currency formatting (`৳`/`$`), and trend badges.
 - [ ] **Section 2: Cash-Flow Forecast Chart:** Interactive 30-day timeline chart with reserve threshold line, deficit zones, and transaction driver drawer.
 - [ ] **Section 3: Alerts & Recommended Actions Feed:** Prioritized cards with severity badges, root-cause breakdown, and inline action buttons.
-- [ ] **Section 4: Invoice Management Ledger:** Searchable, filterable AR/AP data table with partial payment progress, status chips, and action menus.
-- [ ] **Section 5: AI Copilot Chat Interface:** Docked streaming panel with quick prompt pills (*"Can I afford ৳200,000?"*, *"Who owes me most?"*) and Generative UI widgets (mini forecast charts, invoice reminder cards).
+- [x] **Section 4: Invoice Management Ledger:** Searchable, filterable AR/AP data table with partial payment progress, status chips, and action menus.
+- [ ] **Section 5: AI Copilot Chat Interface:** Docked streaming panel with quick prompt pills (_"Can I afford ৳200,000?"_, _"Who owes me most?"_) and Generative UI widgets (mini forecast charts, invoice reminder cards).
 - [ ] **Section 6: Activity & Security Audit Log View:** Auditable event timeline with actor icons (`USER`, `AGENT`, `SYSTEM`, `TELEGRAM`), action tags, and JSON payload inspection dialog.
 - [ ] **HITL Action Approval Modal:** Interactive review modal allowing the user to inspect, edit, and confirm or reject overdue reminder drafts.
 - [ ] **Telegram Account Pairing UI:** Settings panel allowing the user to generate a linking PIN and inspect connection status.
 - [ ] **Tenant Isolation & Security Audit:** Verifying strict `userId` scoping across every query, sanitizing PII in logs, and stress-testing edge boundaries.
-
