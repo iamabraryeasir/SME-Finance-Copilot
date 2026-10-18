@@ -31,7 +31,7 @@ type ProcessingStage =
   | "error";
 
 interface UploadDropzoneProps {
-  onSuccess?: (summary: CsvIngestionSummary) => void;
+  onSuccess?: (summary?: CsvIngestionSummary) => void;
   className?: string;
 }
 
@@ -45,6 +45,11 @@ export function UploadDropzone({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [resultSummary, setResultSummary] =
     useState<CsvIngestionSummary | null>(null);
+  const [documentBatchSummary, setDocumentBatchSummary] = useState<{
+    count: number;
+    fileType: "PDF" | "IMAGE";
+    fileNames: string[];
+  } | null>(null);
   const [previewData, setPreviewData] = useState<CsvPreviewResult | null>(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState<
@@ -62,6 +67,7 @@ export function UploadDropzone({
     setStatusText("");
     setSelectedFiles([]);
     setResultSummary(null);
+    setDocumentBatchSummary(null);
     setPreviewData(null);
     setIsReviewModalOpen(false);
     setValidationErrors([]);
@@ -134,14 +140,48 @@ export function UploadDropzone({
   /**
    * Prepares and queues PDF / Image batch for asynchronous Inngest worker.
    */
-  const handleDocumentBatchPreparation = (
+  const handleDocumentBatchPreparation = async (
     docs: File[],
     type: "PDF" | "IMAGE",
   ) => {
-    setStage("completed");
-    toast.success(
-      `${docs.length} ${type} document(s) accepted. Document OCR extraction pipeline is ready for Inngest worker.`,
-    );
+    try {
+      setStage("uploading");
+      setStatusText(
+        `Uploading ${docs.length} ${type} document(s) to Inngest background queue...`,
+      );
+
+      const formData = new FormData();
+      for (const doc of docs) {
+        formData.append("files", doc);
+      }
+
+      const res = await fetch("/api/ingest/document", {
+        method: "POST",
+        body: formData,
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.message || `Failed to enqueue ${type} documents.`);
+      }
+
+      setDocumentBatchSummary({
+        count: docs.length,
+        fileType: type,
+        fileNames: docs.map((d) => d.name),
+      });
+      setStage("completed");
+      toast.success(
+        `Enqueued ${docs.length} ${type} document(s) for background OCR extraction!`,
+      );
+      onSuccess?.();
+    } catch (err: unknown) {
+      setStage("error");
+      const msg =
+        err instanceof Error ? err.message : "Failed to enqueue documents";
+      setErrorMessage(msg);
+      toast.error(msg);
+    }
   };
 
   /**
@@ -458,6 +498,70 @@ export function UploadDropzone({
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Document Batch Enqueued Success Summary View */}
+      {stage === "completed" && documentBatchSummary && (
+        <div className="border border-primary/30 bg-primary/5 rounded-xl p-6 flex flex-col gap-4">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/20 text-primary flex items-center justify-center">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold text-foreground">
+                  Document Batch Dispatched to Inngest OCR Pipeline
+                </h4>
+                <p className="text-xs text-muted-foreground">
+                  Enqueued {documentBatchSummary.count}{" "}
+                  {documentBatchSummary.fileType} document(s) for asynchronous
+                  extraction and direct ledger persistence.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="default"
+                size="sm"
+                onClick={() => {
+                  onSuccess?.();
+                  toast.success("Ledger refreshed!");
+                }}
+                className="inline-flex items-center gap-1.5"
+              >
+                <RefreshCw className="w-3.5 h-3.5" /> Refresh Ledger
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleReset}
+                className="inline-flex items-center gap-1.5"
+              >
+                Upload More
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2 pt-1">
+            {documentBatchSummary.fileNames.map((name) => (
+              <span
+                key={name}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-card border border-border text-xs font-mono text-foreground"
+              >
+                <FileSpreadsheet className="w-3 h-3 text-primary" />
+                {name}
+              </span>
+            ))}
+          </div>
+
+          <p className="text-[11px] text-muted-foreground border-t border-border/50 pt-3">
+            Inngest background workers verify invoices against our uncertainty
+            gate (&gt;0.85 confidence) and automatically commit them into
+            PostgreSQL and recalculate 30-day cash projections.
+          </p>
         </div>
       )}
 

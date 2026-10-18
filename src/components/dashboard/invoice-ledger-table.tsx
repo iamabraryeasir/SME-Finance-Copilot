@@ -14,7 +14,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
@@ -64,13 +64,13 @@ export interface LedgerSummary {
 
 interface InvoiceLedgerTableProps {
   onRefreshRequest?: () => void;
+  refreshTrigger?: number;
 }
 
 export function InvoiceLedgerTable({
   onRefreshRequest,
+  refreshTrigger,
 }: InvoiceLedgerTableProps) {
-  const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const [invoices, setInvoices] = useState<LedgerInvoice[]>([]);
@@ -109,40 +109,42 @@ export function InvoiceLedgerTable({
 
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Synchronize filter updates with the URL route state
-  const updateRouteState = useCallback(
+  // Synchronize filter updates with browser address bar without triggering Next.js App Router reloads
+  const updateUrlFilters = useCallback(
     (updates: {
       type?: string;
       status?: string;
       month?: string;
       search?: string;
     }) => {
-      const params = new URLSearchParams(searchParams.toString());
+      if (typeof window === "undefined") return;
 
+      const params = new URLSearchParams(window.location.search);
       const nextType = updates.type !== undefined ? updates.type : typeFilter;
+      const nextStatus =
+        updates.status !== undefined ? updates.status : statusFilter;
+      const nextMonth =
+        updates.month !== undefined ? updates.month : monthFilter;
+      const nextSearch = updates.search !== undefined ? updates.search : search;
+
       if (nextType && nextType !== "ALL") {
         params.set("type", nextType);
       } else {
         params.delete("type");
       }
 
-      const nextStatus =
-        updates.status !== undefined ? updates.status : statusFilter;
       if (nextStatus && nextStatus !== "ALL") {
         params.set("status", nextStatus);
       } else {
         params.delete("status");
       }
 
-      const nextMonth =
-        updates.month !== undefined ? updates.month : monthFilter;
       if (nextMonth && nextMonth !== "ALL") {
         params.set("month", nextMonth);
       } else {
         params.delete("month");
       }
 
-      const nextSearch = updates.search !== undefined ? updates.search : search;
       if (nextSearch?.trim()) {
         params.set("search", nextSearch.trim());
       } else {
@@ -151,32 +153,37 @@ export function InvoiceLedgerTable({
       }
 
       const queryString = params.toString();
-      const targetUrl = queryString ? `${pathname}?${queryString}` : pathname;
-      router.replace(targetUrl, { scroll: false });
+      const targetUrl = queryString
+        ? `${window.location.pathname}?${queryString}`
+        : window.location.pathname;
+
+      const currentFull = `${window.location.pathname}${window.location.search}`;
+      if (targetUrl !== currentFull) {
+        window.history.replaceState(null, "", targetUrl);
+      }
     },
-    [
-      searchParams,
-      typeFilter,
-      statusFilter,
-      monthFilter,
-      search,
-      pathname,
-      router,
-    ],
+    [typeFilter, statusFilter, monthFilter, search],
   );
 
-  // Sync state if browser back/forward buttons change searchParams
+  // Sync state if browser back/forward buttons are clicked
   useEffect(() => {
-    const qType = searchParams.get("type") || "ALL";
-    const qStatus = searchParams.get("status") || "ALL";
-    const qMonth = searchParams.get("month") || "ALL";
-    const qSearch = searchParams.get("search") || searchParams.get("q") || "";
+    const handlePopState = () => {
+      if (typeof window === "undefined") return;
+      const params = new URLSearchParams(window.location.search);
+      const qType = params.get("type") || "ALL";
+      const qStatus = params.get("status") || "ALL";
+      const qMonth = params.get("month") || "ALL";
+      const qSearch = params.get("search") || params.get("q") || "";
 
-    setTypeFilter((prev) => (prev !== qType ? qType : prev));
-    setStatusFilter((prev) => (prev !== qStatus ? qStatus : prev));
-    setMonthFilter((prev) => (prev !== qMonth ? qMonth : prev));
-    setSearch((prev) => (prev !== qSearch ? qSearch : prev));
-  }, [searchParams]);
+      setTypeFilter((prev) => (prev !== qType ? qType : prev));
+      setStatusFilter((prev) => (prev !== qStatus ? qStatus : prev));
+      setMonthFilter((prev) => (prev !== qMonth ? qMonth : prev));
+      setSearch((prev) => (prev !== qSearch ? qSearch : prev));
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   // Clean up debounce on unmount
   useEffect(() => {
@@ -188,18 +195,21 @@ export function InvoiceLedgerTable({
   }, []);
 
   const handleTypeChange = (newType: string) => {
+    if (!newType || newType === typeFilter) return;
     setTypeFilter(newType);
-    updateRouteState({ type: newType });
+    updateUrlFilters({ type: newType });
   };
 
   const handleStatusChange = (newStatus: string) => {
+    if (!newStatus || newStatus === statusFilter) return;
     setStatusFilter(newStatus);
-    updateRouteState({ status: newStatus });
+    updateUrlFilters({ status: newStatus });
   };
 
   const handleMonthChange = (newMonth: string) => {
+    if (!newMonth || newMonth === monthFilter) return;
     setMonthFilter(newMonth);
-    updateRouteState({ month: newMonth });
+    updateUrlFilters({ month: newMonth });
   };
 
   const handleSearchChange = (val: string) => {
@@ -208,7 +218,7 @@ export function InvoiceLedgerTable({
       clearTimeout(searchTimeoutRef.current);
     }
     searchTimeoutRef.current = setTimeout(() => {
-      updateRouteState({ search: val });
+      updateUrlFilters({ search: val });
     }, 300);
   };
 
@@ -223,7 +233,9 @@ export function InvoiceLedgerTable({
     setStatusFilter("ALL");
     setMonthFilter("ALL");
     setSearch("");
-    router.replace(pathname, { scroll: false });
+    if (typeof window !== "undefined") {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
   };
 
   const fetchInvoices = useCallback(async () => {
@@ -256,6 +268,18 @@ export function InvoiceLedgerTable({
   useEffect(() => {
     fetchInvoices();
   }, [fetchInvoices]);
+
+  const prevRefreshRef = useRef(refreshTrigger);
+  useEffect(() => {
+    if (
+      refreshTrigger !== undefined &&
+      refreshTrigger > 0 &&
+      refreshTrigger !== prevRefreshRef.current
+    ) {
+      prevRefreshRef.current = refreshTrigger;
+      fetchInvoices();
+    }
+  }, [refreshTrigger, fetchInvoices]);
 
   const handleManualRefresh = () => {
     fetchInvoices();

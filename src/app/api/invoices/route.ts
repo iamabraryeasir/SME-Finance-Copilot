@@ -7,6 +7,7 @@ import {
   getUserInvoices,
   type InvoiceFilters,
 } from "@/services/invoice";
+import { inngest } from "@/utils/inngest";
 
 export async function GET(request: NextRequest) {
   try {
@@ -99,6 +100,22 @@ export async function DELETE(request: NextRequest) {
         invoiceIds,
         ipAddress,
       );
+
+      // Trigger background recalculation in Inngest
+      try {
+        await inngest.send({
+          name: "invoice.ledger.mutated",
+          data: {
+            userId: session.user.id,
+            action: "DELETE",
+            affectedCount: res.deletedCount,
+            source: "MANUAL",
+          },
+        });
+      } catch (inngestErr) {
+        console.warn("[Inngest Dispatch Warning]:", inngestErr);
+      }
+
       return ApiResponse.success(
         res,
         `Successfully deleted ${res.deletedCount} invoice(s) from ledger`,
@@ -112,6 +129,21 @@ export async function DELETE(request: NextRequest) {
     }
 
     const deleted = await deleteInvoice(session.user.id, invoiceId, ipAddress);
+
+    // Trigger background recalculation in Inngest
+    try {
+      await inngest.send({
+        name: "invoice.ledger.mutated",
+        data: {
+          userId: session.user.id,
+          action: "DELETE",
+          affectedCount: 1,
+          source: "MANUAL",
+        },
+      });
+    } catch (inngestErr) {
+      console.warn("[Inngest Dispatch Warning]:", inngestErr);
+    }
 
     return ApiResponse.success(
       { id: deleted.id, invoiceNumber: deleted.invoiceNumber },

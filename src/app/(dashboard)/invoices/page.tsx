@@ -77,7 +77,7 @@ export default function InvoicesPage() {
           </div>
         }
       >
-        <InvoiceLedgerTable key={refreshTrigger} />
+        <InvoiceLedgerTable refreshTrigger={refreshTrigger} />
       </Suspense>
     </div>
   );

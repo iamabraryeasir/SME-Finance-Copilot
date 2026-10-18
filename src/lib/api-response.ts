@@ -103,6 +103,17 @@ export class ApiResponse<T = unknown> {
   }
 
   /**
+   * Generates a standardized 202 Accepted response for background/asynchronous jobs.
+   */
+  static accepted<T>(
+    data: T,
+    message = "Request accepted for background processing",
+    meta?: Record<string, unknown>,
+  ): NextResponse<ApiSuccessResponse<T>> {
+    return ApiResponse.success(data, message, 202, meta);
+  }
+
+  /**
    * Generates a standardized error response with structured failure details.
    */
   static error(

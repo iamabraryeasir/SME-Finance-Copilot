@@ -47,3 +47,4 @@ next-env.d.ts
 # Custom
 data/*
 !data/sample_data.csv
+!data/*.pdf

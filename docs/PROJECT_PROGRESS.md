@@ -45,14 +45,15 @@ flowchart LR
 - [x] **CSV Ingestion Route:** Endpoint (`/api/ingest/csv`) parsing in-memory via `papaparse` with accounts receivable (AR) and accounts payable (AP) Zod schemas.
 - [x] **Deduplication Engine:** Ingestion hash calculation (`hash(userId, invoiceNumber, counterparty, totalAmount)`) and database ledger checks preventing duplicate entries.
 - [x] **Structured Error Reporting:** Detailed row-by-row and column validation failure reports (fail-closed, no silent drops).
-- [ ] **Inngest Background Worker Setup:** Inngest client and webhook handler (`/api/inngest`) for durable asynchronous execution.
-- [ ] **Document OCR Extraction Worker:** Inngest background job extracting invoices from PDFs/images using Node-native parsing (`pdf-parse`).
-- [ ] **OCR Uncertainty Review Gate:** Flagging extractions with confidence $< 0.85$ as `NEEDS_CONFIRMATION` to stage raw data before ledger persistence.
+- [x] **Inngest Background Worker Setup:** Inngest client and webhook handler (`/api/inngest`) for durable asynchronous execution.
+- [x] **Document OCR Extraction Worker:** Inngest background job extracting invoices from PDFs/images using Node-native parsing (`pdf-parse`) and Gemini Flash structured extraction.
+- [x] **Sample PDF Fixtures:** 8 distinct PDF invoices across AR and AP with varied layouts, typography, and styling located in `data/` for end-to-end OCR testing.
+- [x] **OCR Uncertainty Review Gate:** Flagging extractions with confidence $< 0.85$ as `NEEDS_CONFIRMATION` to stage raw data before ledger persistence.
 - [x] **Multi-Format Upload Dropzone:** Drag-and-drop web UI with live MIME-type checks, single-CSV rule enforcement, batch PDF/image support, and validation error breakdown.
 - [x] **Human-in-the-Loop (HITL) Ingestion Review:** Staging modal previewing parsed AR/AP records, live totals, selective inclusion, duplicate alerts, and user confirmation before DB write.
 - [x] **Enterprise API Response Standardization:** Enterprise `ApiResponse` wrapper across all endpoints enforcing strict envelope (`success`, `statusCode`, `message`, `data`, `errors`, `meta`, `timestamp`).
 - [x] **Monthly Ledger Maintenance & Deletion:** Month-based filtering (`YYYY-MM`), batch and single invoice deletion with cascading transaction cleanup and audit trail.
-- [ ] **Metric Recalculation Trigger:** Automatic event dispatch to recalculate financial summary, overdue list, and cash-flow projections upon successful ingestion.
+- [x] **Metric Recalculation Trigger:** Automatic event dispatch (`invoice.ledger.mutated`) to recalculate financial summary, overdue list, and cash-flow projections upon successful ingestion or deletion.
 
 ---
 

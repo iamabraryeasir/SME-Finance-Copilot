@@ -309,3 +309,65 @@ export async function deleteInvoicesBatch(
 
   return { deletedCount: validIds.length };
 }
+
+/**
+ * Deterministically calculates real-time summary KPIs for a user tenant.
+ * Used for post-ingestion recalculation triggers and Redis metric caching.
+ */
+export async function calculateTenantFinancialSummary(userId: string) {
+  if (!userId) {
+    throw new Error("Tenant isolation violation: userId is required");
+  }
+
+  const invoices = await prisma.invoice.findMany({
+    where: { userId },
+    select: {
+      type: true,
+      remainingAmount: true,
+      status: true,
+      dueDate: true,
+    },
+  });
+
+  const now = new Date();
+  let totalReceivables = 0;
+  let totalPayables = 0;
+  let overdueCount = 0;
+  let overdueAmount = 0;
+  let paidCount = 0;
+  let pendingCount = 0;
+
+  for (const inv of invoices) {
+    if (inv.type === "RECEIVABLE") {
+      totalReceivables += inv.remainingAmount;
+    } else {
+      totalPayables += inv.remainingAmount;
+    }
+
+    const isOverdue =
+      inv.status === "OVERDUE" ||
+      (inv.remainingAmount > 0 && new Date(inv.dueDate) < now);
+
+    if (isOverdue) {
+      overdueCount++;
+      overdueAmount += inv.remainingAmount;
+    } else if (inv.status === "PAID") {
+      paidCount++;
+    } else {
+      pendingCount++;
+    }
+  }
+
+  return {
+    totalInvoices: invoices.length,
+    totalReceivables: Math.round(totalReceivables * 100) / 100,
+    totalPayables: Math.round(totalPayables * 100) / 100,
+    netWorkingCapital:
+      Math.round((totalReceivables - totalPayables) * 100) / 100,
+    overdueCount,
+    overdueAmount: Math.round(overdueAmount * 100) / 100,
+    paidCount,
+    pendingCount,
+    calculatedAt: new Date().toISOString(),
+  };
+}

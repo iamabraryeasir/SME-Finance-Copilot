@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { ApiResponse } from "@/lib/api-response";
 import { auth } from "@/lib/auth";
 import { CsvIngestionError, commitApprovedCsv } from "@/services/csv-ingestion";
+import { inngest } from "@/utils/inngest";
 import { confirmIngestSchema } from "@/validations/csv-ingest";
 
 export async function POST(request: NextRequest) {
@@ -38,6 +39,21 @@ export async function POST(request: NextRequest) {
       parseResult.data,
       ipAddress,
     );
+
+    // Dispatch background recalculation event to Inngest
+    try {
+      await inngest.send({
+        name: "invoice.ledger.mutated",
+        data: {
+          userId,
+          action: "INSERT",
+          affectedCount: summary.summary.importedCount,
+          source: "CSV",
+        },
+      });
+    } catch (inngestErr) {
+      console.warn("[Inngest Dispatch Warning]:", inngestErr);
+    }
 
     return ApiResponse.success(
       summary,
