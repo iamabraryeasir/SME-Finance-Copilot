@@ -333,19 +333,22 @@ export async function calculate30DayCashForecast(
 export async function getCachedForecast(
   userId: string,
   forceFresh = false,
-): Promise<CashForecastResult> {
+): Promise<{ forecast: CashForecastResult; fromCache: boolean }> {
   if (!forceFresh && redis) {
     try {
       const cached = await redis.get<string | CashForecastResult>(
         `user:${userId}:forecast_30d`,
       );
       if (cached) {
-        return typeof cached === "string" ? JSON.parse(cached) : cached;
+        const parsed: CashForecastResult =
+          typeof cached === "string" ? JSON.parse(cached) : cached;
+        return { forecast: parsed, fromCache: true };
       }
     } catch (err) {
       console.warn("Redis read warning in getCachedForecast:", err);
     }
   }
 
-  return calculate30DayCashForecast(userId);
+  const forecast = await calculate30DayCashForecast(userId);
+  return { forecast, fromCache: false };
 }

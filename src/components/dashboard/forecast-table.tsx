@@ -9,7 +9,7 @@ import {
   ChevronRight,
   Repeat,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -184,7 +184,7 @@ export function ForecastTable({
                   );
 
                   return (
-                    <tbody key={bucket.date} className="group">
+                    <Fragment key={bucket.date}>
                       <tr
                         onClick={() => hasDetails && toggleDay(bucket.date)}
                         className={`transition-colors hover:bg-muted/30 ${
@@ -425,7 +425,7 @@ export function ForecastTable({
                           </td>
                         </tr>
                       )}
-                    </tbody>
+                    </Fragment>
                   );
                 })
               )}

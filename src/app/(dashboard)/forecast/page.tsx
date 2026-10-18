@@ -47,8 +47,9 @@ export default function ForecastPage() {
         throw new Error(json.message || "Failed to load forecast data");
       }
 
-      setForecastData(json.data.forecast);
-      setFromCache(json.data.fromCache);
+      const receivedForecast = json.data?.forecast || json.data;
+      setForecastData(receivedForecast);
+      setFromCache(Boolean(json.data?.fromCache));
 
       if (fresh) {
         toast.success("Cash-flow projection recalculated from ledger!");
