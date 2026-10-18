@@ -61,20 +61,28 @@ flowchart LR
 
 > **Core Objective:** Pure TypeScript mathematical calculation engines for 30-day cash flow projection, what-if scenario testing, and rule-based risk alerts.
 
-- [ ] **30-Day Cash-Flow Forecasting Engine:** Deterministic calculation module ($Balance(t) = Balance(t-1) + Inflows(t) - Outflows(t)$) in pure TypeScript.
-- [ ] **Conservative Late Receipt Modeling:** Applying user-configured delay buffers ($\text{Due Date} + \Delta_{\text{late}}$) to expected receivables.
-- [ ] **Recurring Overhead Scheduling:** Projecting `RecurringSchedule` commitments (Rent, Payroll, Loan Repayments) on their scheduled day of the month.
-- [ ] **What-If Affordability Simulator:** Scenario simulation engine testing hypothetical purchases (e.g. _"Can I afford ৳200,000 of inventory on Day 5?"_) against the 30-day timeline.
-- [ ] **Deficit & Low-Cash Period Detection:** Flagging dates where balances breach the safety reserve or drop into negative territory.
-- [ ] **Rule-Based Intelligent Alerts Engine:** Evaluating the 5 core deterministic rules:
+- [x] **30-Day Cash-Flow Forecasting Engine:** Deterministic calculation module ($Balance(t) = Balance(t-1) + Inflows(t) - Outflows(t)$) in pure TypeScript (`src/services/forecast.ts`) with Redis cache (`user:${userId}:forecast_30d`, 1h TTL).
+- [x] **Conservative Late Receipt Modeling:** Applying user-configured delay buffers ($\text{Due Date} + \Delta_{\text{late}}$) to expected receivables.
+- [x] **Recurring Overhead Scheduling:** Projecting `RecurringSchedule` commitments (Rent, Payroll, Loan Repayments) on their scheduled day of the month (`src/services/recurring.ts`).
+- [x] **What-If Affordability Simulator:** Scenario simulation engine testing hypothetical purchases and payment delays against the 30-day timeline with deterministic verdicts (`SAFE`, `RESERVE_BREACH`, `UNSAFE_DEFICIT`) (`src/services/simulation.ts`).
+- [x] **Deficit & Low-Cash Period Detection:** Flagging dates where balances breach the safety reserve or drop into negative territory.
+- [x] **Rule-Based Intelligent Alerts Engine:** Evaluating the 5 core deterministic rules (`src/services/alerts.ts`):
   1. Projected cash deficit (negative balance).
   2. Safety reserve threshold breach.
   3. Overdue customer invoices ($>14$ days, $<7$ days).
   4. Upcoming large supplier payments (due $\le 48$ hours).
   5. Unusual expense anomalies relative to monthly baseline.
-- [ ] **Deterministic Severity Scoring Matrix:** Assigning severity (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`) without LLM hallucination.
-- [ ] **Root-Cause Attribution:** Attaching structured `supportingData` (driving invoice IDs, counterparties, and amounts) to each alert.
-- [ ] **Nightly Recalculation Cron:** Inngest scheduled worker running nightly 30-day projections and updating active alerts.
+- [x] **Deterministic Severity Scoring Matrix:** Assigning severity (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`) without LLM hallucination.
+- [x] **Root-Cause Attribution:** Attaching structured `supportingData` (driving invoice IDs, counterparties, and amounts) to each alert.
+- [x] **Nightly Recalculation Cron & Inngest Automation:** Inngest scheduled worker (`src/utils/inngest/functions/scheduled-forecast-alerts.ts`) running nightly (`0 0 * * *`) and event-driven recalculations (`recalculate-financials.ts`) updating active alerts and refreshing Redis cache upon ledger mutations.
+- [x] **REST API Endpoints:** Dedicated route handlers for `GET /api/forecast`, `POST /api/forecast/simulate`, `GET /api/alerts`, `PATCH /api/alerts/[id]`, `GET, POST /api/recurring`, and `PATCH, DELETE /api/recurring/[id]`.
+- [x] **Production Frontend UI Views:**
+  - Interactive SVG 30-Day Projection Chart with deficit gradient fills, safety reserve reference line, and hover crosshair (`src/components/dashboard/forecast-chart.tsx`).
+  - What-If Affordability Simulator drawer with preset test scenarios, slider controls, and live comparison overlay (`src/components/dashboard/scenario-simulator.tsx`).
+  - Day-by-Day Forecast Breakdown Table with filter tabs and expandable contributing transactions (`src/components/dashboard/forecast-table.tsx`).
+  - Fixed Overhead & Recurring Commitments Manager card with active pause/resume and quick inline creation (`src/components/dashboard/recurring-schedules-card.tsx`).
+  - Full Forecast Dashboard page (`src/app/(dashboard)/forecast/page.tsx`).
+  - Full Risk Alerts Center page with severity filter cards, attribution inspection, and status management (`src/app/(dashboard)/alerts/page.tsx`).
 
 ---
 
