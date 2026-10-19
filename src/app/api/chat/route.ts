@@ -217,7 +217,7 @@ export async function POST(req: Request) {
 
             await recordAiTelemetry({
               userId,
-              model: "gemini-3.8-flash",
+              model: "gemini-3.5-flash",
               promptTokens,
               completionTokens,
               totalTokens,

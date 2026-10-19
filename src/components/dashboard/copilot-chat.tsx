@@ -823,7 +823,7 @@ export function CopilotChat({
                 </Badge>
               </div>
               <CardDescription className="text-xs">
-                Gemini 3.8 Flash + Multi-Tier Failover &bull; 8 Deterministic
+                Gemini 3.5 Flash + Multi-Tier Failover &bull; 8 Deterministic
                 Tools Bound
               </CardDescription>
             </div>

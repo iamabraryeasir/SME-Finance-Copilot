@@ -34,28 +34,28 @@ export function getFinancialModel(
   const boundModels: FinancialChatModel[] = [];
 
   if (geminiApiKey) {
-    // Tier 1: Primary Gemini 1.5 Flash (1,500 RPD free tier quota)
-    const gemini15 = new ChatGoogleGenerativeAI({
-      model: "gemini-1.5-flash",
+    // Tier 1: Primary Gemini 3.5 Flash (Recommended active production model)
+    const gemini35 = new ChatGoogleGenerativeAI({
+      model: "gemini-3.5-flash",
       apiKey: geminiApiKey,
       temperature,
       maxOutputTokens,
       streaming,
     });
     boundModels.push(
-      tools && tools.length > 0 ? gemini15.bindTools(tools) : gemini15,
+      tools && tools.length > 0 ? gemini35.bindTools(tools) : gemini35,
     );
 
-    // Tier 2: Resilient High-Capacity Fallback Gemini 2.0 Flash
-    const gemini20 = new ChatGoogleGenerativeAI({
-      model: "gemini-2.0-flash",
+    // Tier 2: Resilient High-Capacity Fallback Gemini 2.5 Flash
+    const gemini25 = new ChatGoogleGenerativeAI({
+      model: "gemini-2.5-flash",
       apiKey: geminiApiKey,
       temperature,
       maxOutputTokens,
       streaming,
     });
     boundModels.push(
-      tools && tools.length > 0 ? gemini20.bindTools(tools) : gemini20,
+      tools && tools.length > 0 ? gemini25.bindTools(tools) : gemini25,
     );
   }
 
@@ -91,13 +91,13 @@ import { GoogleGenAI } from "@google/genai";
 let geminiClientInstance: GoogleGenAI | null = null;
 
 /**
- * Returns the singleton modern Google Gen AI client for direct Gemini 3.8 Flash calls.
+ * Returns the singleton modern Google Gen AI client for direct Gemini 3.5 Flash calls.
  */
 export function getGeminiClient(): GoogleGenAI {
   const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey) {
     throw new Error(
-      "Missing GEMINI_API_KEY: Set GEMINI_API_KEY in your environment variables to use Gemini 3.8 Flash.",
+      "Missing GEMINI_API_KEY: Set GEMINI_API_KEY in your environment variables to use Gemini 3.5 Flash.",
     );
   }
   if (!geminiClientInstance) {

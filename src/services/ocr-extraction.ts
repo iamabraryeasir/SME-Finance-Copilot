@@ -276,7 +276,7 @@ ${rawText.slice(0, 12000)}
       }
 
       const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-3.5-flash",
         contents,
         config: {
           responseMimeType: "application/json",
@@ -348,7 +348,7 @@ ${rawText.slice(0, 12000)}
       );
     } catch (err) {
       console.warn(
-        "Gemini 1.5 Flash extraction failed, attempting Groq fallback:",
+        "Gemini 3.5 Flash extraction failed, attempting Groq fallback:",
         err,
       );
     }

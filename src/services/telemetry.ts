@@ -136,7 +136,7 @@ export async function getGlobalAiTelemetry(): Promise<GlobalAiTelemetry> {
     requests: number;
     tokens: number;
   }> = [
-    { model: "gemini-1.5-flash", requests: 0, tokens: 0 },
+    { model: "gemini-3.5-flash", requests: 0, tokens: 0 },
     { model: "llama-3.3-70b-versatile", requests: 0, tokens: 0 },
   ];
 
@@ -158,7 +158,7 @@ export async function getGlobalAiTelemetry(): Promise<GlobalAiTelemetry> {
         redis.get<number>("telemetry:ai:global:completion_tokens"),
         redis.get<number>("telemetry:ai:global:requests"),
         redis.hgetall<Record<string, string>>(
-          "telemetry:ai:model:gemini-1.5-flash",
+          "telemetry:ai:model:gemini-3.5-flash",
         ),
         redis.hgetall<Record<string, string>>(
           "telemetry:ai:model:llama-3.3-70b-versatile",
@@ -173,7 +173,7 @@ export async function getGlobalAiTelemetry(): Promise<GlobalAiTelemetry> {
 
       modelBreakdown = [
         {
-          model: "gemini-1.5-flash (Primary)",
+          model: "gemini-3.5-flash (Primary)",
           requests: Number(geminiStats?.requests) || 0,
           tokens: Number(geminiStats?.tokens) || 0,
         },
@@ -241,7 +241,7 @@ export async function getGlobalAiTelemetry(): Promise<GlobalAiTelemetry> {
     toolBreakdown: toolBreakdown.sort((a, b) => b.invocations - a.invocations),
     systemHealth: {
       redisAvailable: Boolean(redis),
-      primaryModel: "gemini-1.5-flash",
+      primaryModel: "gemini-3.5-flash",
       fallbackModel: "llama-3.3-70b-versatile",
       status: "HEALTHY",
     },
