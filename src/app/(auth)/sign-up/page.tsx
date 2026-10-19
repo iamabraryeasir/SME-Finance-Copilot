@@ -3,13 +3,11 @@
 import { useForm } from "@tanstack/react-form";
 import {
   ArrowRight,
-  CheckCircle2,
   Eye,
   EyeOff,
   Loader2,
   Lock,
   Mail,
-  ShieldCheck,
   User,
   UserPlus,
 } from "lucide-react";
@@ -85,32 +83,6 @@ export default function SignUpPage() {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Value Proposition Highlights */}
-        <div className="rounded-xl border border-border/70 bg-muted/30 p-3 text-xs space-y-1.5">
-          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase font-mono">
-            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span>Enterprise Guardrails Included</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] text-foreground/90">
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-3 w-3 text-primary-text shrink-0" />
-              <span>30-Day Cash Runway Engine</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-3 w-3 text-primary-text shrink-0" />
-              <span>Zero-Trust Ingestion OCR</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-3 w-3 text-primary-text shrink-0" />
-              <span>Human-in-the-Loop Actions</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-3 w-3 text-primary-text shrink-0" />
-              <span>Omni-Channel Telegram Bot</span>
-            </div>
-          </div>
-        </div>
-
         <form
           onSubmit={(e) => {
             e.preventDefault();

@@ -73,12 +73,6 @@ export default function SignInPage() {
     },
   });
 
-  const handleQuickDemo = (demoEmail: string, demoPass: string) => {
-    form.setFieldValue("email", demoEmail);
-    form.setFieldValue("password", demoPass);
-    toast.success(`Demo credentials loaded for ${demoEmail}`);
-  };
-
   return (
     <Card className="w-full shadow-xl border-border/80 bg-card/95 backdrop-blur-xs transition-all">
       <CardHeader className="space-y-1.5 text-center pb-4">
@@ -95,40 +89,6 @@ export default function SignInPage() {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Quick Evaluation Demo Access */}
-        <div className="bg-muted/40 border border-border/60 rounded-xl p-3 space-y-2">
-          <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
-            <span>FAST EVALUATION ACCESS</span>
-            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-wider">
-              1-Click Fill
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                handleQuickDemo("rahman@example.com", "Password123!")
-              }
-              className="h-8 text-[11px] font-mono justify-center px-2 hover:bg-muted transition-colors cursor-pointer"
-            >
-              👤 Rahman Trading
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                handleQuickDemo("admin@cashpilot.ai", "AdminSecure2026!")
-              }
-              className="h-8 text-[11px] font-mono justify-center px-2 hover:bg-muted transition-colors cursor-pointer"
-            >
-              🛡️ Admin Console
-            </Button>
-          </div>
-        </div>
-
         <form
           onSubmit={(e) => {
             e.preventDefault();
