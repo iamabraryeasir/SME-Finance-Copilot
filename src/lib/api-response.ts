@@ -196,3 +196,17 @@ export class ApiResponse<T = unknown> {
     return ApiResponse.error(message, 500);
   }
 }
+
+/**
+ * Detects Next.js internal dynamic prerender interruption signals (e.g. NEXT_PRERENDER_INTERRUPTED).
+ * These must be rethrown so Next.js correctly registers dynamic route handlers during static build.
+ */
+export function isNextBailout(error: unknown): boolean {
+  return (
+    Boolean(error) &&
+    typeof error === "object" &&
+    "digest" in (error as Record<string, unknown>) &&
+    typeof (error as Record<string, unknown>).digest === "string" &&
+    ((error as Record<string, unknown>).digest as string).startsWith("NEXT_")
+  );
+}

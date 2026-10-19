@@ -1,5 +1,6 @@
 import type { AuditAction, AuditActor } from "@prisma/client";
 import { NextResponse } from "next/server";
+import { isNextBailout } from "@/lib/api-response";
 import { auth } from "@/lib/auth";
 import { getUserAuditLogs } from "@/services/audit";
 
@@ -52,6 +53,7 @@ export async function GET(req: Request) {
       timestamp: new Date().toISOString(),
     });
   } catch (error: unknown) {
+    if (isNextBailout(error)) throw error;
     const message =
       error instanceof Error ? error.message : "Internal server error";
     console.error("[AuditAPI Error]:", error);

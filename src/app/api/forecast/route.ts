@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { ApiResponse } from "@/lib/api-response";
+import { ApiResponse, isNextBailout } from "@/lib/api-response";
 import { auth } from "@/lib/auth";
 import { getCachedForecast } from "@/services/forecast";
 
@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
       "30-day cash-flow forecast calculated successfully.",
     );
   } catch (error) {
+    if (isNextBailout(error)) throw error;
     console.error("[Forecast API Error]:", error);
     return ApiResponse.internal("Failed to calculate cash-flow forecast.");
   }

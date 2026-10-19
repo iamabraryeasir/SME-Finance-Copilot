@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { ApiResponse } from "@/lib/api-response";
+import { ApiResponse, isNextBailout } from "@/lib/api-response";
 import { auth } from "@/lib/auth";
 import {
   evaluateAndSyncFinancialAlerts,
@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
       "Financial risk alerts retrieved successfully.",
     );
   } catch (error) {
+    if (isNextBailout(error)) throw error;
     console.error("[Alerts API Error]:", error);
     return ApiResponse.internal("Failed to retrieve financial risk alerts.");
   }
