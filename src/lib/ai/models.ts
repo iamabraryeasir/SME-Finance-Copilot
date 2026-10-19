@@ -34,35 +34,35 @@ export function getFinancialModel(
   const boundModels: FinancialChatModel[] = [];
 
   if (geminiApiKey) {
-    // Tier 1: Primary Gemini 3.8 Flash
-    const gemini38 = new ChatGoogleGenerativeAI({
-      model: "gemini-3.8-flash",
+    // Tier 1: Primary Gemini 1.5 Flash (1,500 RPD free tier quota)
+    const gemini15 = new ChatGoogleGenerativeAI({
+      model: "gemini-1.5-flash",
       apiKey: geminiApiKey,
       temperature,
       maxOutputTokens,
       streaming,
     });
     boundModels.push(
-      tools && tools.length > 0 ? gemini38.bindTools(tools) : gemini38,
+      tools && tools.length > 0 ? gemini15.bindTools(tools) : gemini15,
     );
 
-    // Tier 2: Resilient High-Capacity Fallback Gemini 2.5 Flash (1,500 RPD quota)
-    const gemini25 = new ChatGoogleGenerativeAI({
-      model: "gemini-2.5-flash",
+    // Tier 2: Resilient High-Capacity Fallback Gemini 2.0 Flash
+    const gemini20 = new ChatGoogleGenerativeAI({
+      model: "gemini-2.0-flash",
       apiKey: geminiApiKey,
       temperature,
       maxOutputTokens,
       streaming,
     });
     boundModels.push(
-      tools && tools.length > 0 ? gemini25.bindTools(tools) : gemini25,
+      tools && tools.length > 0 ? gemini20.bindTools(tools) : gemini20,
     );
   }
 
   if (groqApiKey) {
-    // Tier 3: Ultra-Fast Failover via Groq (openai/gpt-oss-120b with tool calling)
+    // Tier 3: Ultra-Fast Failover via Groq (llama-3.3-70b-versatile with tool calling)
     const groqModel = new ChatGroq({
-      model: "openai/gpt-oss-120b",
+      model: "llama-3.3-70b-versatile",
       apiKey: groqApiKey,
       temperature,
       maxTokens: maxOutputTokens,

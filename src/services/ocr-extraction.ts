@@ -34,7 +34,7 @@ if (typeof (globalThis as Record<string, unknown>).ImageData === "undefined") {
   (globalThis as Record<string, unknown>).ImageData = class ImageData {};
 }
 
-import { GoogleGenAI, ThinkingLevel, Type } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import { z } from "zod";
 
 export const extractedInvoiceSchema = z.object({
@@ -77,15 +77,16 @@ export type ExtractedInvoice = z.infer<typeof extractedInvoiceSchema>;
 
 /**
  * Extracts raw textual content from an in-memory PDF buffer without disk writes.
+ * Uses unpdf for serverless-safe execution without external worker file dependencies.
  */
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   try {
-    const { PDFParse } = await import("pdf-parse");
-    const parser = new PDFParse({ data: buffer });
-    const result = await parser.getText();
-    return (result.text || "").trim();
+    const { getDocumentProxy, extractText } = await import("unpdf");
+    const pdf = await getDocumentProxy(new Uint8Array(buffer));
+    const { text } = await extractText(pdf, { mergePages: true });
+    return (text || "").trim();
   } catch (err) {
-    console.warn("Failed to extract text from PDF with PDFParse:", err);
+    console.warn("Failed to extract text from PDF with unpdf:", err);
     return "";
   }
 }
@@ -275,7 +276,7 @@ ${rawText.slice(0, 12000)}
       }
 
       const response = await ai.models.generateContent({
-        model: "gemini-3.8-flash",
+        model: "gemini-1.5-flash",
         contents,
         config: {
           responseMimeType: "application/json",
@@ -330,9 +331,6 @@ ${rawText.slice(0, 12000)}
               "confidenceScore",
             ],
           },
-          thinkingConfig: {
-            thinkingLevel: ThinkingLevel.LOW,
-          },
           temperature: 0.1,
         },
       });
@@ -350,13 +348,13 @@ ${rawText.slice(0, 12000)}
       );
     } catch (err) {
       console.warn(
-        "Gemini 3.8 Flash extraction failed, attempting Groq fallback:",
+        "Gemini 1.5 Flash extraction failed, attempting Groq fallback:",
         err,
       );
     }
   }
 
-  // Secondary LLM: Groq (via open-source fast models like openai/gpt-oss-120b or llama-3.2-11b-vision-preview)
+  // Secondary LLM: Groq (via open-source fast models like llama-3.3-70b-versatile or llama-3.2-11b-vision-preview)
   const groqKey = process.env.GROQ_API_KEY?.trim();
   if (groqKey) {
     try {
@@ -420,7 +418,7 @@ ${rawText.slice(0, 12000)}
           body: JSON.stringify({
             model: isImage
               ? "llama-3.2-11b-vision-preview"
-              : "openai/gpt-oss-120b",
+              : "llama-3.3-70b-versatile",
             messages,
             response_format: { type: "json_object" },
             temperature: 0.1,
