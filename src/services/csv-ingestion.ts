@@ -502,110 +502,158 @@ export async function commitApprovedCsv(
   let totalAmountInflow = 0;
   let totalAmountOutflow = 0;
 
-  await prisma.$transaction(async (tx) => {
-    // 1. Mark DocumentUpload as CONFIRMED
-    await tx.documentUpload.update({
-      where: { id: input.uploadId },
-      data: {
-        status: "CONFIRMED",
-        extractedData: {
-          approvedCount: approvedRows.length,
-          confirmedAt: now.toISOString(),
-        },
-      },
-    });
+  const invoicesToCreate: Array<{
+    id: string;
+    userId: string;
+    invoiceNumber: string;
+    counterparty: string;
+    counterpartyEmail: string | null;
+    counterpartyPhone: string | null;
+    type: "RECEIVABLE" | "PAYABLE";
+    totalAmount: number;
+    paidAmount: number;
+    remainingAmount: number;
+    currency: string;
+    issueDate: Date;
+    dueDate: Date;
+    status: "PENDING" | "PARTIALLY_PAID" | "OVERDUE" | "PAID" | "CANCELLED";
+    source: "WEB_CSV";
+    documentUploadId: string;
+  }> = [];
 
-    // 2. Insert Invoices & Transactions
-    for (const row of approvedRows) {
-      const issueDate = new Date(row.issueDate);
-      const dueDate = new Date(row.dueDate);
-      const paidAmount = row.paidAmount ?? 0;
-      const remainingAmount = Math.max(
-        0,
-        Math.round((row.totalAmount - paidAmount) * 100) / 100,
-      );
+  const transactionsToCreate: Array<{
+    id: string;
+    userId: string;
+    invoiceId: string;
+    type: "INFLOW" | "OUTFLOW";
+    category: "CUSTOMER_RECEIPT" | "SUPPLIER_PAYMENT";
+    amount: number;
+    currency: string;
+    transactionDate: Date;
+    description: string;
+    isProjected: boolean;
+  }> = [];
 
-      // Deterministic status derivation
-      let finalStatus = row.status;
-      if (!finalStatus) {
-        if (paidAmount >= row.totalAmount) {
-          finalStatus = "PAID";
-        } else if (paidAmount > 0) {
-          finalStatus = "PARTIALLY_PAID";
-        } else if (dueDate < now) {
-          finalStatus = "OVERDUE";
-        } else {
-          finalStatus = "PENDING";
-        }
-      }
+  for (const row of approvedRows) {
+    const issueDate = new Date(row.issueDate);
+    const dueDate = new Date(row.dueDate);
+    const paidAmount = row.paidAmount ?? 0;
+    const remainingAmount = Math.max(
+      0,
+      Math.round((row.totalAmount - paidAmount) * 100) / 100,
+    );
 
-      if (row.type === "RECEIVABLE") {
-        totalAmountInflow += row.totalAmount;
+    // Deterministic status derivation
+    let finalStatus = row.status;
+    if (!finalStatus) {
+      if (paidAmount >= row.totalAmount) {
+        finalStatus = "PAID";
+      } else if (paidAmount > 0) {
+        finalStatus = "PARTIALLY_PAID";
+      } else if (dueDate < now) {
+        finalStatus = "OVERDUE";
       } else {
-        totalAmountOutflow += row.totalAmount;
-      }
-
-      const createdInvoice = await tx.invoice.create({
-        data: {
-          userId,
-          invoiceNumber: row.invoiceNumber,
-          counterparty: row.counterparty,
-          counterpartyEmail: row.counterpartyEmail ?? null,
-          counterpartyPhone: row.counterpartyPhone ?? null,
-          type: row.type,
-          totalAmount: row.totalAmount,
-          paidAmount,
-          remainingAmount,
-          currency: row.currency || "BDT",
-          issueDate,
-          dueDate,
-          status: finalStatus,
-          source: "WEB_CSV",
-          documentUploadId: documentUpload.id,
-        },
-      });
-
-      // 3. Create realized Transaction if payment is partially or fully settled
-      if (paidAmount > 0) {
-        await tx.transaction.create({
-          data: {
-            userId,
-            invoiceId: createdInvoice.id,
-            type: row.type === "RECEIVABLE" ? "INFLOW" : "OUTFLOW",
-            category:
-              row.type === "RECEIVABLE"
-                ? "CUSTOMER_RECEIPT"
-                : "SUPPLIER_PAYMENT",
-            amount: paidAmount,
-            currency: row.currency || "BDT",
-            transactionDate: issueDate,
-            description: `Settled payment for ${row.type === "RECEIVABLE" ? "Customer" : "Supplier"} Invoice ${row.invoiceNumber} (${row.counterparty})`,
-            isProjected: false,
-          },
-        });
+        finalStatus = "PENDING";
       }
     }
 
-    // 4. Record AuditLog
-    await tx.auditLog.create({
-      data: {
-        userId,
-        actor: "USER",
-        actionType: "INGESTION",
-        entityType: "DocumentUpload",
-        entityId: documentUpload.id,
-        status: "SUCCESS",
-        ipAddress: ipAddress ?? null,
-        details: {
-          fileName: documentUpload.fileName,
-          importedCount: approvedRows.length,
-          totalAmountInflow,
-          totalAmountOutflow,
-          action: "APPROVED_AND_COMMITTED",
-        },
-      },
+    if (row.type === "RECEIVABLE") {
+      totalAmountInflow += row.totalAmount;
+    } else {
+      totalAmountOutflow += row.totalAmount;
+    }
+
+    const invoiceId = globalThis.crypto.randomUUID();
+
+    invoicesToCreate.push({
+      id: invoiceId,
+      userId,
+      invoiceNumber: row.invoiceNumber,
+      counterparty: row.counterparty,
+      counterpartyEmail: row.counterpartyEmail ?? null,
+      counterpartyPhone: row.counterpartyPhone ?? null,
+      type: row.type,
+      totalAmount: row.totalAmount,
+      paidAmount,
+      remainingAmount,
+      currency: row.currency || "BDT",
+      issueDate,
+      dueDate,
+      status: finalStatus,
+      source: "WEB_CSV",
+      documentUploadId: documentUpload.id,
     });
-  });
+
+    if (paidAmount > 0) {
+      transactionsToCreate.push({
+        id: globalThis.crypto.randomUUID(),
+        userId,
+        invoiceId,
+        type: row.type === "RECEIVABLE" ? "INFLOW" : "OUTFLOW",
+        category:
+          row.type === "RECEIVABLE" ? "CUSTOMER_RECEIPT" : "SUPPLIER_PAYMENT",
+        amount: paidAmount,
+        currency: row.currency || "BDT",
+        transactionDate: issueDate,
+        description: `Settled payment for ${row.type === "RECEIVABLE" ? "Customer" : "Supplier"} Invoice ${row.invoiceNumber} (${row.counterparty})`,
+        isProjected: false,
+      });
+    }
+  }
+
+  await prisma.$transaction(
+    async (tx) => {
+      // 1. Mark DocumentUpload as CONFIRMED
+      await tx.documentUpload.update({
+        where: { id: input.uploadId },
+        data: {
+          status: "CONFIRMED",
+          extractedData: {
+            approvedCount: approvedRows.length,
+            confirmedAt: now.toISOString(),
+          },
+        },
+      });
+
+      // 2. Batch insert all Invoices (1 query instead of N queries)
+      if (invoicesToCreate.length > 0) {
+        await tx.invoice.createMany({
+          data: invoicesToCreate,
+        });
+      }
+
+      // 3. Batch insert all realized Transactions (1 query instead of N queries)
+      if (transactionsToCreate.length > 0) {
+        await tx.transaction.createMany({
+          data: transactionsToCreate,
+        });
+      }
+
+      // 4. Record AuditLog in single query
+      await tx.auditLog.create({
+        data: {
+          userId,
+          actor: "USER",
+          actionType: "INGESTION",
+          entityType: "DocumentUpload",
+          entityId: documentUpload.id,
+          status: "SUCCESS",
+          ipAddress: ipAddress ?? null,
+          details: {
+            fileName: documentUpload.fileName,
+            importedCount: approvedRows.length,
+            totalAmountInflow,
+            totalAmountOutflow,
+            action: "APPROVED_AND_COMMITTED",
+          },
+        },
+      });
+    },
+    {
+      maxWait: 15000, // 15 seconds to acquire connection from pool
+      timeout: 30000, // 30 seconds for entire transaction
+    },
+  );
 
   return {
     uploadId: documentUpload.id,

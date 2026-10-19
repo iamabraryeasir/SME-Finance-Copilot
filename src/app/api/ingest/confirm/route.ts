@@ -65,8 +65,27 @@ export async function POST(request: NextRequest) {
     }
 
     console.error("[Ingest Confirm API Error]:", error);
-    return ApiResponse.internal(
-      "Failed to commit approved invoices to the ledger.",
-    );
+
+    // Provide friendly actionable error messages for Prisma database errors
+    const prismaError = error as { code?: string; message?: string };
+    if (prismaError?.code === "P2028") {
+      return ApiResponse.error(
+        "Database transaction timed out. Please try approving again.",
+        504,
+      );
+    }
+    if (prismaError?.code === "P2002") {
+      return ApiResponse.error(
+        "One or more invoices in this batch already exist in your ledger.",
+        409,
+      );
+    }
+
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Failed to commit approved invoices to the ledger.";
+
+    return ApiResponse.internal(message);
   }
 }

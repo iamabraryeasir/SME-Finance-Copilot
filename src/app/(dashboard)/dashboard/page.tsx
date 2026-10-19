@@ -175,16 +175,6 @@ export default function DashboardPage() {
             />
             {isRefreshing ? "Syncing..." : "Sync Fresh"}
           </Button>
-
-          <Link href="/copilot">
-            <Button
-              size="sm"
-              className="gap-2 h-9 rounded-xl text-xs bg-primary text-primary-foreground font-semibold hover:bg-primary/90 shadow-2xs"
-            >
-              <Sparkles className="h-3.5 w-3.5" />
-              Ask CashPilot
-            </Button>
-          </Link>
         </div>
       </div>
 
