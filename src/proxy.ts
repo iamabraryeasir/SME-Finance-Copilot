@@ -71,7 +71,9 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/forecast") ||
     pathname.startsWith("/alerts") ||
     pathname.startsWith("/copilot") ||
-    pathname.startsWith("/settings");
+    pathname.startsWith("/settings") ||
+    pathname === "/audit" ||
+    pathname.startsWith("/audit/");
   const isAdminPage = pathname.startsWith("/admin");
 
   // 3. Authenticated user attempting to visit login/registration -> redirect to role dashboard
@@ -80,16 +82,29 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(destination, request.url));
   }
 
-  // 4. Unauthenticated user attempting to access protected dashboard/admin -> redirect to /sign-in
+  // 4. Banned user lockout: immediately redirect to sign-in with error
+  if (isAuthenticated && session?.user?.banned) {
+    const signInUrl = new URL("/sign-in", request.url);
+    signInUrl.searchParams.set("error", "account_banned");
+    return NextResponse.redirect(signInUrl);
+  }
+
+  // 5. Unauthenticated user attempting to access protected dashboard/admin -> redirect to /sign-in
   if (!isAuthenticated && (isDashboardPage || isAdminPage)) {
     const signInUrl = new URL("/sign-in", request.url);
     signInUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(signInUrl);
   }
 
-  // 5. Role-Based Access Control: standard users cannot access /admin
+  // 5. Strict Role-Based Access Control Isolation:
+  // Standard users cannot access Admin Monitoring views
   if (isAuthenticated && isAdminPage && userRole !== "admin") {
     return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  // Admins cannot access SME dashboard views
+  if (isAuthenticated && isDashboardPage && userRole === "admin") {
+    return NextResponse.redirect(new URL("/admin", request.url));
   }
 
   return NextResponse.next();

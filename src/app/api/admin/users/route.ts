@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import type { NextRequest } from "next/server";
 import { ApiResponse, isNextBailout } from "@/lib/api-response";
 import { auth } from "@/lib/auth";
@@ -16,10 +17,22 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get("search")?.toLowerCase() || "";
+    const search = searchParams.get("search")?.trim().toLowerCase() || "";
+    const page = Math.max(
+      1,
+      Number.parseInt(searchParams.get("page") || "1", 10),
+    );
+    const limit = Math.max(
+      1,
+      Math.min(100, Number.parseInt(searchParams.get("limit") || "10", 10)),
+    );
+    const skip = (page - 1) * limit;
 
-    const users = await prisma.user.findMany({
-      where: search
+    // Filter out the requesting admin itself and any other system admins
+    const where: Prisma.UserWhereInput = {
+      id: { not: session.user.id },
+      role: { not: "admin" },
+      ...(search
         ? {
             OR: [
               { name: { contains: search, mode: "insensitive" } },
@@ -31,42 +44,53 @@ export async function GET(request: NextRequest) {
               },
             ],
           }
-        : undefined,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        emailVerified: true,
-        role: true,
-        createdAt: true,
-        updatedAt: true,
-        businessProfile: {
-          select: {
-            companyName: true,
-            currency: true,
-            openingBalance: true,
-            minReserveThreshold: true,
+        : {}),
+    };
+
+    const [totalCount, users] = await Promise.all([
+      prisma.user.count({ where }),
+      prisma.user.findMany({
+        where,
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          emailVerified: true,
+          role: true,
+          banned: true,
+          banReason: true,
+          createdAt: true,
+          updatedAt: true,
+          businessProfile: {
+            select: {
+              companyName: true,
+              currency: true,
+              openingBalance: true,
+              minReserveThreshold: true,
+            },
+          },
+          telegramAccount: {
+            select: {
+              id: true,
+              telegramUsername: true,
+              createdAt: true,
+            },
+          },
+          _count: {
+            select: {
+              invoices: true,
+              transactions: true,
+              alerts: true,
+              documentUploads: true,
+              conversations: true,
+            },
           },
         },
-        telegramAccount: {
-          select: {
-            id: true,
-            telegramUsername: true,
-            createdAt: true,
-          },
-        },
-        _count: {
-          select: {
-            invoices: true,
-            transactions: true,
-            alerts: true,
-            documentUploads: true,
-            conversations: true,
-          },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+        orderBy: { createdAt: "desc" },
+      }),
+    ]);
 
     const formattedUsers = users.map((u) => ({
       id: u.id,
@@ -74,6 +98,8 @@ export async function GET(request: NextRequest) {
       email: u.email,
       emailVerified: u.emailVerified,
       role: u.role || "user",
+      banned: Boolean(u.banned),
+      banReason: u.banReason || null,
       joinedAt: u.createdAt.toISOString(),
       companyName: u.businessProfile?.companyName || "Unconfigured SME",
       currency: u.businessProfile?.currency || "BDT",
@@ -93,7 +119,10 @@ export async function GET(request: NextRequest) {
     return ApiResponse.success(
       {
         users: formattedUsers,
-        totalCount: formattedUsers.length,
+        totalCount,
+        page,
+        limit,
+        totalPages: Math.ceil(totalCount / limit),
       },
       "Users directory retrieved successfully.",
     );

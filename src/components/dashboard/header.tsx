@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  ArrowLeftRight,
-  Bell,
-  Bot,
-  ChevronRight,
-  Menu,
-  Shield,
-  ShieldCheck,
-} from "lucide-react";
+import { Bot, ChevronRight, Menu, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
@@ -27,13 +19,18 @@ const routeTitles: Record<string, { group: string; title: string }> = {
   "/copilot": { group: "Intelligence", title: "AI Copilot" },
   "/audit": { group: "Governance", title: "Audit & Security" },
   "/settings": { group: "Configuration", title: "Financial Settings" },
-  "/admin": { group: "Administration", title: "System Monitor & Security" },
+  "/admin": { group: "System Monitoring", title: "Platform Overview" },
+  "/admin/telemetry": {
+    group: "System Monitoring",
+    title: "AI & Token Telemetry",
+  },
+  "/admin/users": { group: "Tenancy & Directory", title: "Users & Tenants" },
+  "/admin/audit": { group: "Platform Security", title: "Global Audit Stream" },
 };
 
 export function DashboardHeader({ onMenuToggle }: HeaderProps) {
   const pathname = usePathname();
   const { data: session } = authClient.useSession();
-  const isAdmin = session?.user?.role === "admin";
   const isOnAdminRoute = pathname.startsWith("/admin");
 
   const currentRoute = routeTitles[pathname] || {
@@ -75,61 +72,32 @@ export function DashboardHeader({ onMenuToggle }: HeaderProps) {
         </div>
       </div>
 
-      {/* Right: Context Switcher, Copilot Link, Notification Bell & User Avatar */}
+      {/* Right: Role-specific tools, Notification Bell & User Avatar */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Role-Based Context Switcher for Admin */}
-        {isAdmin &&
-          (isOnAdminRoute ? (
-            <div className="flex items-center gap-2">
-              <Badge
-                variant="outline"
-                className="hidden md:inline-flex items-center gap-1 text-[10px] font-mono border-primary/30 bg-primary/10 text-primary-text px-2 py-0.5"
-              >
-                <ShieldCheck className="h-3 w-3" />
-                Security Monitor
-              </Badge>
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-1.5 rounded-lg border border-border/80 bg-background/60 px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-foreground/30 hover:bg-muted/40"
-                title="Switch to SME Tenant Financial View"
-              >
-                <ArrowLeftRight className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="hidden sm:inline">SME Tenant View</span>
-              </Link>
-            </div>
-          ) : (
-            <Link
-              href="/admin"
-              className="flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-2.5 py-1.5 text-xs font-medium text-primary-text transition-colors hover:bg-primary/20"
-              title="Switch to Admin Platform System Monitor"
-            >
-              <Shield className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Admin Monitor</span>
-            </Link>
-          ))}
+        {isOnAdminRoute ? (
+          <Badge
+            variant="outline"
+            className="hidden md:inline-flex items-center gap-1 text-[10px] font-mono border-primary/30 bg-primary/10 text-primary-text px-2 py-0.5"
+          >
+            <ShieldCheck className="h-3 w-3" />
+            Security Monitor
+          </Badge>
+        ) : (
+          <Link
+            href="/copilot"
+            className="flex items-center gap-1.5 rounded-lg border border-border/80 bg-background/60 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-foreground/30 hover:bg-muted/40"
+          >
+            <Bot className="h-3.5 w-3.5 text-primary-text" />
+            <span>AI Copilot</span>
+          </Link>
+        )}
 
-        {/* Link to Copilot Button */}
-        <Link
-          href="/copilot"
-          className="flex items-center gap-1.5 rounded-lg border border-border/80 bg-background/60 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-foreground/30 hover:bg-muted/40"
-        >
-          <Bot className="h-3.5 w-3.5 text-primary-text" />
-          <span>AI Copilot</span>
-        </Link>
-
-        {/* Notification Bell */}
-        <button
-          type="button"
-          className="relative flex h-8 w-8 items-center justify-center rounded-lg border border-border/80 bg-background/60 text-muted-foreground transition-colors hover:text-foreground hover:bg-muted"
-          aria-label="View notifications"
-        >
-          <Bell className="h-3.5 w-3.5" />
-          <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-primary" />
-        </button>
-
-        {/* User Avatar Circle */}
-        <div className="flex items-center pl-3 border-l border-border/60">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-primary-text font-bold text-xs ring-1 ring-primary/40">
+        {/* User Avatar Circle (Display only, does nothing on click) */}
+        <div className="flex items-center pl-2 sm:pl-3 border-l border-border/60">
+          <div
+            className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-primary-text font-bold text-xs ring-1 ring-primary/40 select-none"
+            title={session?.user?.name || "User"}
+          >
             {userInitials}
           </div>
         </div>

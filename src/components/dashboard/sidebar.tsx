@@ -2,17 +2,20 @@
 
 import {
   Bot,
+  Cpu,
   LayoutDashboard,
   LogOut,
   PanelLeftClose,
   ShieldCheck,
   SlidersHorizontal,
+  Users,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import toast from "react-hot-toast";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
 
+import { SignOutModal } from "@/components/dashboard/sign-out-modal";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
@@ -101,7 +104,8 @@ interface NavGroup {
   items: NavItem[];
 }
 
-const navGroups: NavGroup[] = [
+// User role navigation groups (financial operations & planning)
+const userNavGroups: NavGroup[] = [
   {
     label: "Operations",
     items: [
@@ -159,36 +163,69 @@ const navGroups: NavGroup[] = [
   },
 ];
 
+// Admin role navigation groups (system monitoring, telemetry & platform security)
+const adminNavGroups: NavGroup[] = [
+  {
+    label: "System Monitoring",
+    items: [
+      {
+        title: "Platform Overview",
+        href: "/admin",
+        icon: LayoutDashboard,
+      },
+      {
+        title: "AI & Token Telemetry",
+        href: "/admin/telemetry",
+        icon: Cpu,
+      },
+    ],
+  },
+  {
+    label: "Tenancy & Directory",
+    items: [
+      {
+        title: "Users & Tenants",
+        href: "/admin/users",
+        icon: Users,
+      },
+    ],
+  },
+  {
+    label: "Platform Security",
+    items: [
+      {
+        title: "Global Audit Stream",
+        href: "/admin/audit",
+        icon: ShieldCheck,
+      },
+    ],
+  },
+];
+
 export function DashboardSidebar({
   onNavClick,
   isExpanded = true,
   onMinimize,
 }: SidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
   const { data: session, isPending } = authClient.useSession();
 
+  const isAdmin = session?.user?.role === "admin";
+  const isOnAdminRoute =
+    pathname === "/admin" || pathname.startsWith("/admin/");
+
+  // Distinct role-based navigation:
+  // When an admin is in the admin context (/admin/*), render admin monitoring nav.
+  // Otherwise, render SME financial nav.
+  const activeNavGroups =
+    isAdmin && isOnAdminRoute ? adminNavGroups : userNavGroups;
+
   const isItemActive = (href: string) => {
-    if (href === "/dashboard") {
-      return pathname === "/dashboard";
+    if (href === "/dashboard" || href === "/admin") {
+      return pathname === href;
     }
     return pathname === href || pathname.startsWith(`${href}/`);
-  };
-
-  const handleSignOut = async () => {
-    try {
-      await authClient.signOut({
-        fetchOptions: {
-          onSuccess: () => {
-            toast.success("Signed out successfully");
-            router.push("/sign-in");
-            router.refresh();
-          },
-        },
-      });
-    } catch {
-      toast.error("Failed to sign out");
-    }
   };
 
   const userInitials =
@@ -211,10 +248,14 @@ export function DashboardSidebar({
           )}
         >
           <Link
-            href="/dashboard"
+            href={isOnAdminRoute && isAdmin ? "/admin" : "/dashboard"}
             onClick={onNavClick}
             className="flex items-center gap-2.5 transition-opacity hover:opacity-85 min-w-0"
-            title="CashPilot AI"
+            title={
+              isOnAdminRoute && isAdmin
+                ? "CashPilot AI - System Monitor"
+                : "CashPilot AI"
+            }
           >
             {/* Logo image from public/app_logo.svg */}
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/60 p-1">
@@ -228,11 +269,20 @@ export function DashboardSidebar({
             </div>
             {isExpanded && (
               <div className="flex flex-col min-w-0">
-                <span className="text-base font-bold tracking-tight text-foreground leading-none truncate">
-                  CashPilot AI
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-base font-bold tracking-tight text-foreground leading-none truncate">
+                    CashPilot AI
+                  </span>
+                  {isOnAdminRoute && isAdmin && (
+                    <span className="text-[9px] font-mono font-semibold px-1 py-0.5 rounded bg-primary/10 text-primary-text border border-primary/20 leading-none">
+                      ADMIN
+                    </span>
+                  )}
+                </div>
                 <span className="text-[10px] text-muted-foreground font-mono mt-0.5 truncate">
-                  Financial Management
+                  {isOnAdminRoute && isAdmin
+                    ? "System Monitor"
+                    : "Financial Management"}
                 </span>
               </div>
             )}
@@ -254,7 +304,7 @@ export function DashboardSidebar({
 
         {/* Grouped Navigation */}
         <div className="flex flex-col gap-3">
-          {navGroups.map((group) => (
+          {activeNavGroups.map((group) => (
             <div key={group.label} className="space-y-1">
               {isExpanded ? (
                 <p className="px-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80 font-mono truncate">
@@ -303,42 +353,6 @@ export function DashboardSidebar({
               </nav>
             </div>
           ))}
-
-          {/* Admin Role Section */}
-          {session?.user?.role === "admin" && (
-            <div className="space-y-1">
-              {isExpanded ? (
-                <p className="px-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80 font-mono truncate">
-                  Administration
-                </p>
-              ) : (
-                <div className="h-px bg-border/40 my-1.5 mx-2" />
-              )}
-              <nav className="flex flex-col gap-1">
-                <Link
-                  href="/admin"
-                  onClick={onNavClick}
-                  title="System Monitor & Security"
-                  className={cn(
-                    "flex items-center rounded-xl text-xs font-medium transition-colors",
-                    isExpanded
-                      ? "justify-between px-3 py-2"
-                      : "justify-center h-10 w-10 mx-auto",
-                    pathname === "/admin" || pathname.startsWith("/admin/")
-                      ? "bg-primary text-primary-foreground font-semibold shadow-2xs"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                  )}
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <ShieldCheck className="h-4 w-4 shrink-0 text-current" />
-                    {isExpanded && (
-                      <span className="truncate">System Monitor</span>
-                    )}
-                  </div>
-                </Link>
-              </nav>
-            </div>
-          )}
         </div>
       </div>
 
@@ -360,75 +374,61 @@ export function DashboardSidebar({
             )}
           </div>
         ) : isExpanded ? (
-          <div className="flex flex-col gap-2 rounded-xl border border-border bg-[#F9F9F6] dark:bg-muted/40 p-2.5 shadow-2xs">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-xs ring-1 ring-primary/30">
-                  {userInitials}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-semibold text-foreground leading-tight">
-                    {session?.user?.name || "Rahman Trading"}
-                  </p>
-                  <p className="truncate text-[10px] text-muted-foreground font-mono">
-                    {session?.user?.role === "admin"
-                      ? pathname.startsWith("/admin")
-                        ? "Admin Context"
-                        : "SME Tenant View"
-                      : "SME Owner"}
-                  </p>
-                </div>
+          <div className="flex items-center justify-between rounded-xl border border-border bg-[#F9F9F6] dark:bg-muted/40 p-2.5 shadow-2xs">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-xs ring-1 ring-primary/30">
+                {userInitials}
               </div>
-
-              {/* Sign Out Button */}
-              <button
-                type="button"
-                onClick={handleSignOut}
-                title="Sign Out"
-                aria-label="Sign out of account"
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-              >
-                <LogOut className="h-3.5 w-3.5" />
-              </button>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-semibold text-foreground leading-tight">
+                  {session?.user?.name ||
+                    (isAdmin ? "System Admin" : "Rahman Trading")}
+                </p>
+                <p className="truncate text-[10px] text-muted-foreground font-mono">
+                  {isAdmin ? "System Administrator" : "SME Owner"}
+                </p>
+              </div>
             </div>
 
-            {/* Quick Context Switcher for Admin */}
-            {session?.user?.role === "admin" && (
-              <div className="pt-1.5 border-t border-border/60 flex items-center justify-between text-[10px]">
-                <span className="text-muted-foreground font-mono">
-                  {pathname.startsWith("/admin")
-                    ? "System Mode"
-                    : "Tenant Mode"}
-                </span>
-                <Link
-                  href={pathname.startsWith("/admin") ? "/dashboard" : "/admin"}
-                  onClick={onNavClick}
-                  className="font-semibold text-primary-text hover:underline flex items-center gap-1"
-                >
-                  {pathname.startsWith("/admin")
-                    ? "Go to SME View →"
-                    : "Go to Monitor →"}
-                </Link>
-              </div>
-            )}
+            {/* Sign Out Button */}
+            <button
+              type="button"
+              onClick={() => setShowSignOutModal(true)}
+              title="Sign Out"
+              aria-label="Sign out of account"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive cursor-pointer"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
           </div>
         ) : (
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center gap-2">
             <div
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-xs ring-1 ring-primary/30 cursor-pointer"
-              title={`${session?.user?.name || "Rahman Trading"} (${
-                session?.user?.role === "admin"
-                  ? pathname.startsWith("/admin")
-                    ? "Admin System Monitor"
-                    : "SME Tenant Mode"
-                  : "Owner access"
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-xs ring-1 ring-primary/30 select-none"
+              title={`${session?.user?.name || "User"} (${
+                isAdmin ? "System Administrator" : "SME Owner"
               })`}
             >
               {userInitials}
             </div>
+            <button
+              type="button"
+              onClick={() => setShowSignOutModal(true)}
+              title="Sign Out"
+              aria-label="Sign out of account"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive cursor-pointer"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
         )}
       </div>
+
+      {/* Sign Out Confirmation Modal */}
+      <SignOutModal
+        isOpen={showSignOutModal}
+        onClose={() => setShowSignOutModal(false)}
+      />
     </aside>
   );
 }
