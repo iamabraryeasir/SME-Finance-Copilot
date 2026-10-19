@@ -150,7 +150,7 @@ export default function DashboardPage() {
       {/* Header matching Design System Mockup */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl sm:text-4xl font-normal tracking-tight text-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
             Your cash, at a glance
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
@@ -210,7 +210,7 @@ export default function DashboardPage() {
                   +12.4% vs last month
                 </span>
               </div>
-              <div className="font-serif text-3xl font-normal tracking-tight text-foreground">
+              <div className="font-mono text-3xl font-semibold tracking-tight text-foreground">
                 {symbol}
                 {forecast?.summary.startingCash.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
@@ -245,7 +245,7 @@ export default function DashboardPage() {
                   +8.1% vs last month
                 </span>
               </div>
-              <div className="font-serif text-3xl font-normal tracking-tight text-foreground">
+              <div className="font-mono text-3xl font-semibold tracking-tight text-foreground">
                 +{symbol}
                 {forecast?.summary.totalProjectedInflow.toLocaleString(
                   undefined,
@@ -272,7 +272,7 @@ export default function DashboardPage() {
                   -3.2% vs last month
                 </span>
               </div>
-              <div className="font-serif text-3xl font-normal tracking-tight text-foreground">
+              <div className="font-mono text-3xl font-semibold tracking-tight text-foreground">
                 -{symbol}
                 {forecast?.summary.totalProjectedOutflow.toLocaleString(
                   undefined,
@@ -358,7 +358,7 @@ export default function DashboardPage() {
                 <div>
                   <CardHeader className="p-5 pb-3">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="font-serif text-xl font-normal tracking-tight text-foreground">
+                      <CardTitle className="text-xl font-semibold tracking-tight text-foreground">
                         Needs attention
                       </CardTitle>
                       <span className="rounded-full bg-[#FF5B37]/15 text-[#FF5B37] px-2.5 py-0.5 text-xs font-semibold">

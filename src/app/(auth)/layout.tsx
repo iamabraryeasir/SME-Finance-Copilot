@@ -28,7 +28,7 @@ export default function AuthLayout({
             />
           </div>
           <div className="flex flex-col">
-            <span className="font-serif text-lg font-bold tracking-tight text-foreground leading-none">
+            <span className="text-lg font-bold tracking-tight text-foreground leading-none">
               CashPilot AI
             </span>
             <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-mono mt-0.5">

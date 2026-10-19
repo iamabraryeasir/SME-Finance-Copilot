@@ -176,7 +176,7 @@ export default function AuditTrailPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="font-serif text-3xl font-normal tracking-tight text-foreground">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
               Security & Compliance Audit Trail
             </h1>
             <Badge variant="outline" className="text-[10px] gap-1 py-0.5">

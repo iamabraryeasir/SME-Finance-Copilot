@@ -75,7 +75,7 @@ export default function SignUpPage() {
         <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20 text-primary-text border border-primary/30">
           <UserPlus className="h-5 w-5" />
         </div>
-        <CardTitle className="font-serif text-2xl font-bold tracking-tight text-foreground">
+        <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
           Create Enterprise Account
         </CardTitle>
         <CardDescription className="text-xs text-muted-foreground max-w-xs mx-auto">

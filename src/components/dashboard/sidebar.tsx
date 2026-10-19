@@ -229,7 +229,7 @@ export function DashboardSidebar({
             </div>
             {isExpanded && (
               <div className="flex flex-col min-w-0">
-                <span className="font-serif text-base font-bold tracking-tight text-foreground leading-none truncate">
+                <span className="text-base font-bold tracking-tight text-foreground leading-none truncate">
                   CashPilot AI
                 </span>
                 <span className="text-[10px] text-muted-foreground font-mono mt-0.5 truncate">

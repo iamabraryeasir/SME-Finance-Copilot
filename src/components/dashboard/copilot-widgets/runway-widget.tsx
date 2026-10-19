@@ -64,7 +64,7 @@ export function RunwayWidget({
               Deterministic Cash Runway
             </h4>
             <div className="flex items-center gap-2">
-              <span className="font-serif text-lg font-bold text-foreground">
+              <span className="font-mono text-lg font-bold text-foreground">
                 {daysRemaining} Days
               </span>
               <Badge

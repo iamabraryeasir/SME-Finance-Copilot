@@ -151,7 +151,7 @@ export function ActionReviewModal({
               <div className="flex items-center gap-2">
                 <h3
                   id="action-modal-title"
-                  className="font-serif text-lg font-bold text-foreground"
+                  className="text-lg font-bold text-foreground"
                 >
                   Human-in-the-Loop Action Review
                 </h3>
