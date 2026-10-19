@@ -352,3 +352,8 @@ export async function getCachedForecast(
   const forecast = await calculate30DayCashForecast(userId);
   return { forecast, fromCache: false };
 }
+
+/**
+ * Direct alias for calculate30DayCashForecast
+ */
+export const get30DayForecast = calculate30DayCashForecast;
