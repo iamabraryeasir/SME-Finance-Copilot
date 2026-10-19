@@ -11,7 +11,8 @@ import {
   Tooltip,
   type TooltipItem,
 } from "chart.js";
-import { PieChart, TrendingDown, TrendingUp } from "lucide-react";
+import { ArrowRight, PieChart, TrendingDown, TrendingUp } from "lucide-react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Bar, Doughnut } from "react-chartjs-2";
 
@@ -52,6 +53,12 @@ export function LedgerDistributionChart({
 
   const currentReceivables = Math.max(0, totalReceivables - overdueReceivables);
   const netWorkingCapital = totalReceivables - totalPayables;
+  const totalVolume =
+    currentReceivables + overdueReceivables + totalPayables || 1;
+
+  const currentPercent = Math.round((currentReceivables / totalVolume) * 100);
+  const overduePercent = Math.round((overdueReceivables / totalVolume) * 100);
+  const payablesPercent = Math.round((totalPayables / totalVolume) * 100);
 
   // Doughnut Chart Data: AR vs AP Ratio
   const doughnutData = useMemo(() => {
@@ -87,16 +94,7 @@ export function LedgerDistributionChart({
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: "bottom" as const,
-          labels: {
-            boxWidth: 10,
-            boxHeight: 10,
-            usePointStyle: true,
-            font: {
-              size: 11,
-            },
-            color: "var(--foreground, #64748b)",
-          },
+          display: false,
         },
         tooltip: {
           backgroundColor: "rgba(15, 23, 42, 0.95)",
@@ -109,7 +107,7 @@ export function LedgerDistributionChart({
           },
         },
       },
-      cutout: "68%",
+      cutout: "70%",
     };
   }, [symbol]);
 
@@ -138,9 +136,7 @@ export function LedgerDistributionChart({
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: {
-          display: false,
-        },
+        legend: { display: false },
         tooltip: {
           backgroundColor: "rgba(15, 23, 42, 0.95)",
           padding: 10,
@@ -180,25 +176,24 @@ export function LedgerDistributionChart({
   }, [symbol]);
 
   return (
-    <Card className="border border-border shadow-xs">
-      <CardHeader className="pb-2">
+    <Card className="border border-border/80 shadow-2xs bg-card flex flex-col justify-between h-full">
+      <CardHeader className="p-4 pb-2">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="space-y-1">
-            <CardTitle className="text-base flex items-center gap-2">
+          <div className="space-y-0.5">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
               <PieChart className="h-4 w-4 text-primary-text" />
               Liquidity Obligation Distribution
             </CardTitle>
-            <CardDescription className="text-xs">
-              Powered by Chart.js &bull; Accounts Receivable collection vs
-              Accounts Payable commitments.
+            <CardDescription className="text-xs text-muted-foreground">
+              Receivables collection vs Payables commitments ratio.
             </CardDescription>
           </div>
 
-          <div className="flex items-center rounded-lg border border-border p-1 bg-muted/30 self-start sm:self-auto">
+          <div className="flex items-center rounded-lg border border-border p-0.5 bg-muted/40 self-start sm:self-auto text-xs">
             <button
               type="button"
               onClick={() => setChartType("RATIO")}
-              className={`text-xs px-2.5 py-0.5 rounded-md transition-colors ${
+              className={`text-[11px] px-2.5 py-1 rounded-md transition-colors ${
                 chartType === "RATIO"
                   ? "bg-background text-foreground shadow-xs font-semibold"
                   : "text-muted-foreground hover:text-foreground"
@@ -209,7 +204,7 @@ export function LedgerDistributionChart({
             <button
               type="button"
               onClick={() => setChartType("STATUS")}
-              className={`text-xs px-2.5 py-0.5 rounded-md transition-colors ${
+              className={`text-[11px] px-2.5 py-1 rounded-md transition-colors ${
                 chartType === "STATUS"
                   ? "bg-background text-foreground shadow-xs font-semibold"
                   : "text-muted-foreground hover:text-foreground"
@@ -221,23 +216,77 @@ export function LedgerDistributionChart({
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-3">
-        <div className="h-55 w-full relative">
-          {chartType === "RATIO" ? (
-            <Doughnut data={doughnutData} options={doughnutOptions} />
-          ) : (
-            <Bar data={barData} options={barOptions} />
-          )}
+      <CardContent className="p-4 pt-2 space-y-4 flex-1 flex flex-col justify-between">
+        {/* Visual Chart + Breakdown Matrix Row */}
+        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 py-1">
+          <div className="h-44 w-44 relative shrink-0 mx-auto sm:mx-0 flex items-center justify-center">
+            {chartType === "RATIO" ? (
+              <Doughnut data={doughnutData} options={doughnutOptions} />
+            ) : (
+              <Bar data={barData} options={barOptions} />
+            )}
+          </div>
+
+          {/* Breakdown Legend List */}
+          <div className="flex-1 w-full space-y-2 text-xs">
+            <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+                <span className="font-medium text-foreground">Current AR</span>
+              </div>
+              <div className="flex items-center gap-2 font-mono">
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                  +{symbol}
+                  {currentReceivables.toLocaleString()}
+                </span>
+                <span className="text-[10px] text-muted-foreground w-8 text-right">
+                  {currentPercent}%
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
+                <span className="font-medium text-foreground">Overdue AR</span>
+              </div>
+              <div className="flex items-center gap-2 font-mono">
+                <span className="font-semibold text-amber-700 dark:text-amber-400">
+                  {symbol}
+                  {overdueReceivables.toLocaleString()}
+                </span>
+                <span className="text-[10px] text-muted-foreground w-8 text-right">
+                  {overduePercent}%
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pb-1.5 border-b border-border/40">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0" />
+                <span className="font-medium text-foreground">Upcoming AP</span>
+              </div>
+              <div className="flex items-center gap-2 font-mono">
+                <span className="font-semibold text-rose-600 dark:text-rose-400">
+                  -{symbol}
+                  {totalPayables.toLocaleString()}
+                </span>
+                <span className="text-[10px] text-muted-foreground w-8 text-right">
+                  {payablesPercent}%
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Footer Metrics */}
-        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border text-xs">
-          <div className="p-2 rounded-md bg-muted/30 border border-border/50">
-            <div className="text-[10px] text-muted-foreground uppercase font-mono">
+        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/60 text-xs">
+          <div className="p-2.5 rounded-xl bg-muted/30 border border-border/60">
+            <div className="text-[10px] text-muted-foreground uppercase font-mono font-medium">
               Net Working Position
             </div>
             <div
-              className={`font-mono font-bold mt-0.5 flex items-center gap-1 ${
+              className={`font-mono font-bold text-sm mt-0.5 flex items-center gap-1 ${
                 netWorkingCapital >= 0
                   ? "text-emerald-600 dark:text-emerald-400"
                   : "text-rose-600 dark:text-rose-400"
@@ -255,17 +304,29 @@ export function LedgerDistributionChart({
             </div>
           </div>
 
-          <div className="p-2 rounded-md bg-muted/30 border border-border/50">
-            <div className="text-[10px] text-muted-foreground uppercase font-mono">
-              Overdue Exposure
-            </div>
-            <div className="font-mono font-bold mt-0.5 text-amber-600 dark:text-amber-400">
-              {symbol}
-              {overdueReceivables.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
+          <div className="p-2.5 rounded-xl bg-muted/30 border border-border/60 flex flex-col justify-between">
+            <div>
+              <div className="text-[10px] text-muted-foreground uppercase font-mono font-medium">
+                Overdue Exposure
+              </div>
+              <div className="font-mono font-bold text-sm mt-0.5 text-amber-700 dark:text-amber-400">
+                {symbol}
+                {overdueReceivables.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                })}
+              </div>
             </div>
           </div>
+        </div>
+
+        <div className="pt-1 flex justify-end">
+          <Link
+            href="/invoices"
+            className="text-[11px] font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-1 transition-colors"
+          >
+            <span>Manage invoices & ledger</span>
+            <ArrowRight className="h-3 w-3" />
+          </Link>
         </div>
       </CardContent>
     </Card>

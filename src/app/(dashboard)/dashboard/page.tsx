@@ -289,9 +289,9 @@ export default function DashboardPage() {
           </div>
 
           {/* Section 2: Main Layout Grid (Forecast Runway on Left + Needs Attention on Right) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             {/* Left 7-8 Cols: 30-Day Cash Projection Runway */}
-            <div className="lg:col-span-8 space-y-6">
+            <div className="lg:col-span-8 flex flex-col justify-between space-y-4">
               {forecast && (
                 <ForecastChart
                   dailyBuckets={forecast.dailyBuckets}
@@ -353,92 +353,95 @@ export default function DashboardPage() {
             </div>
 
             {/* Right 4-5 Cols: "Needs Attention" Panel Matching Image 5 */}
-            <div className="lg:col-span-4 space-y-4">
-              <Card className="rounded-2xl border border-border bg-card shadow-2xs flex flex-col justify-between">
-                <CardHeader className="p-5 pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="font-serif text-xl font-normal tracking-tight text-foreground">
-                      Needs attention
-                    </CardTitle>
-                    <span className="rounded-full bg-[#FF5B37]/15 text-[#FF5B37] px-2.5 py-0.5 text-xs font-semibold">
-                      {activeAlertsCount} active
-                    </span>
-                  </div>
-                  <CardDescription className="text-xs text-muted-foreground">
-                    Items requiring operational action to safeguard cash runway.
-                  </CardDescription>
-                </CardHeader>
-
-                <CardContent className="p-5 pt-0 space-y-3">
-                  {alerts.length === 0 ? (
-                    <div className="py-8 text-center text-muted-foreground border border-dashed border-border rounded-xl p-4">
-                      <ShieldCheck className="h-7 w-7 text-emerald-500 mx-auto mb-1.5" />
-                      <p className="text-xs font-semibold text-foreground">
-                        All clear — No risk alerts
-                      </p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
-                        Inflows and reserves are currently safe.
-                      </p>
+            <div className="lg:col-span-4 flex flex-col">
+              <Card className="rounded-2xl border border-border bg-card shadow-2xs flex flex-col justify-between h-full">
+                <div>
+                  <CardHeader className="p-5 pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="font-serif text-xl font-normal tracking-tight text-foreground">
+                        Needs attention
+                      </CardTitle>
+                      <span className="rounded-full bg-[#FF5B37]/15 text-[#FF5B37] px-2.5 py-0.5 text-xs font-semibold">
+                        {activeAlertsCount} active
+                      </span>
                     </div>
-                  ) : (
-                    alerts.slice(0, 3).map((alert) => (
-                      <div
-                        key={alert.id}
-                        className="rounded-xl border border-border bg-[#F9F9F6] dark:bg-muted/30 p-3 text-xs space-y-2 transition-all hover:border-foreground/20"
-                      >
-                        <div className="flex items-start gap-2">
-                          <div className="mt-0.5 rounded-md bg-amber-500/10 p-1 text-amber-600 dark:text-amber-400 shrink-0">
-                            <AlertTriangle className="h-3.5 w-3.5" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="font-semibold text-foreground truncate">
-                              {alert.title}
-                            </div>
-                            <div className="text-[11px] text-muted-foreground mt-0.5">
-                              {alert.impactAmount ? (
-                                <span>
-                                  {symbol}
-                                  {alert.impactAmount.toLocaleString()} ·{" "}
-                                </span>
-                              ) : null}
-                              <span className="line-clamp-1">
-                                {alert.description}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
+                    <CardDescription className="text-xs text-muted-foreground">
+                      Items requiring operational action to safeguard cash
+                      runway.
+                    </CardDescription>
+                  </CardHeader>
 
-                        {/* Action Link Button */}
-                        <div className="flex justify-end pt-1 border-t border-border/50">
-                          <Link
-                            href={
-                              alert.category === "OVERDUE_RECEIVABLE"
-                                ? "/invoices"
-                                : alert.category === "CASH_DEFICIT" ||
-                                    alert.category === "RESERVE_BREACH"
-                                  ? "/forecast"
-                                  : "/alerts"
-                            }
-                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-foreground hover:text-primary-text transition-colors"
-                          >
-                            <span>
-                              {alert.category === "OVERDUE_RECEIVABLE"
-                                ? "Send reminder"
-                                : alert.category === "CASH_DEFICIT" ||
-                                    alert.category === "RESERVE_BREACH"
-                                  ? "Review cash flow"
-                                  : "View invoice"}
-                            </span>
-                            <ArrowRight className="h-3 w-3" />
-                          </Link>
-                        </div>
+                  <CardContent className="p-5 pt-0 space-y-3">
+                    {alerts.length === 0 ? (
+                      <div className="py-8 text-center text-muted-foreground border border-dashed border-border rounded-xl p-4">
+                        <ShieldCheck className="h-7 w-7 text-emerald-500 mx-auto mb-1.5" />
+                        <p className="text-xs font-semibold text-foreground">
+                          All clear — No risk alerts
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          Inflows and reserves are currently safe.
+                        </p>
                       </div>
-                    ))
-                  )}
-                </CardContent>
+                    ) : (
+                      alerts.slice(0, 3).map((alert) => (
+                        <div
+                          key={alert.id}
+                          className="rounded-xl border border-border bg-[#F9F9F6] dark:bg-muted/30 p-3 text-xs space-y-2 transition-all hover:border-foreground/20"
+                        >
+                          <div className="flex items-start gap-2">
+                            <div className="mt-0.5 rounded-md bg-amber-500/10 p-1 text-amber-600 dark:text-amber-400 shrink-0">
+                              <AlertTriangle className="h-3.5 w-3.5" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="font-semibold text-foreground truncate">
+                                {alert.title}
+                              </div>
+                              <div className="text-[11px] text-muted-foreground mt-0.5">
+                                {alert.impactAmount ? (
+                                  <span>
+                                    {symbol}
+                                    {alert.impactAmount.toLocaleString()} ·{" "}
+                                  </span>
+                                ) : null}
+                                <span className="line-clamp-1">
+                                  {alert.description}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Action Link Button */}
+                          <div className="flex justify-end pt-1 border-t border-border/50">
+                            <Link
+                              href={
+                                alert.category === "OVERDUE_RECEIVABLE"
+                                  ? "/invoices"
+                                  : alert.category === "CASH_DEFICIT" ||
+                                      alert.category === "RESERVE_BREACH"
+                                    ? "/forecast"
+                                    : "/alerts"
+                              }
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-foreground hover:text-primary-text transition-colors"
+                            >
+                              <span>
+                                {alert.category === "OVERDUE_RECEIVABLE"
+                                  ? "Send reminder"
+                                  : alert.category === "CASH_DEFICIT" ||
+                                      alert.category === "RESERVE_BREACH"
+                                    ? "Review cash flow"
+                                    : "View invoice"}
+                              </span>
+                              <ArrowRight className="h-3 w-3" />
+                            </Link>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </CardContent>
+                </div>
 
                 {/* Quick Actions Footer matching Image 5 */}
-                <div className="p-4 pt-2 border-t border-border flex flex-col gap-2">
+                <div className="p-4 pt-3 border-t border-border flex flex-col gap-2 mt-auto">
                   <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground font-mono">
                     Quick Actions
                   </div>
@@ -480,157 +483,162 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Section 3: Ledger Distribution Breakdown */}
-          <div className="pt-2">
-            <LedgerDistributionChart
-              totalReceivables={invoiceSummary?.totalReceivables || 0}
-              totalPayables={invoiceSummary?.totalPayables || 0}
-              overdueReceivables={overdueReceivablesAmount}
-              currency={forecast?.summary.currency || "BDT"}
-            />
-          </div>
+          {/* Section 4, 5 & 6: Balanced Row - Liquidity Distribution & Intelligence/Activity */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch pt-2">
+            {/* Section 4: Liquidity Obligation Distribution */}
+            <div className="lg:col-span-6 flex flex-col">
+              <LedgerDistributionChart
+                totalReceivables={invoiceSummary?.totalReceivables || 0}
+                totalPayables={invoiceSummary?.totalPayables || 0}
+                overdueReceivables={overdueReceivablesAmount}
+                currency={forecast?.summary.currency || "BDT"}
+              />
+            </div>
 
-          {/* Section 5 & 6: Copilot Advisory Quick Dock & Recent Compliance Activity */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2">
-            {/* Section 5: AI Copilot Launchpad Dock */}
-            <Card className="border border-border/80 shadow-2xs bg-card flex flex-col justify-between">
-              <CardHeader className="p-4 pb-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/20 text-primary-text">
-                      <Bot className="h-4 w-4" />
-                    </div>
-                    <CardTitle className="text-sm font-semibold text-foreground">
-                      AI Advisory Dock
-                    </CardTitle>
-                  </div>
-                  <Badge
-                    variant="outline"
-                    className="text-[10px] text-primary-text border-primary/40 bg-primary/10"
-                  >
-                    Gemini 3.8 Flash
-                  </Badge>
-                </div>
-                <CardDescription className="text-xs text-muted-foreground mt-1">
-                  Autonomous financial reasoning over verified database records.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-4 pt-2 space-y-3">
-                <div className="rounded-xl border border-border/60 bg-muted/30 p-3 text-xs space-y-2">
-                  <span className="text-[10px] uppercase font-mono text-muted-foreground block font-semibold">
-                    Recommended Queries
-                  </span>
-                  <Link
-                    href="/copilot"
-                    className="block text-xs text-foreground hover:text-primary-text transition-colors line-clamp-1"
-                  >
-                    &bull; &ldquo;Can I afford to purchase ৳150,000 inventory on
-                    Day 10?&rdquo;
-                  </Link>
-                  <Link
-                    href="/copilot"
-                    className="block text-xs text-foreground hover:text-primary-text transition-colors line-clamp-1"
-                  >
-                    &bull; &ldquo;Who owes me the most money and which invoices
-                    are overdue?&rdquo;
-                  </Link>
-                </div>
-                <Link href="/copilot" className="block w-full">
-                  <Button
-                    size="sm"
-                    className="w-full text-xs h-8 bg-primary text-black hover:bg-primary/90 gap-1.5 font-medium"
-                  >
-                    <Sparkles className="h-3.5 w-3.5" />
-                    Open Copilot Advisory
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            {/* Section 6: Real-Time Audit & Compliance Stream */}
-            <Card className="lg:col-span-2 border border-border/80 shadow-2xs bg-card flex flex-col justify-between">
-              <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between space-y-0">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-foreground">
-                    <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-sm font-semibold text-foreground">
-                      Recent Activity & Compliance Log
-                    </CardTitle>
-                    <CardDescription className="text-xs text-muted-foreground">
-                      Append-only ledger of agent decisions, approvals, and
-                      mutations.
-                    </CardDescription>
-                  </div>
-                </div>
-                <Link href="/audit">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 text-xs text-muted-foreground hover:text-foreground gap-1 px-2"
-                  >
-                    View All <ArrowRight className="h-3 w-3" />
-                  </Button>
-                </Link>
-              </CardHeader>
-              <CardContent className="p-4 pt-2">
-                {recentAuditLogs.length === 0 ? (
-                  <div className="p-6 text-center text-xs text-muted-foreground">
-                    No recent audit events logged.
-                  </div>
-                ) : (
-                  <div className="divide-y divide-border/50 space-y-0">
-                    {recentAuditLogs.map((log) => (
-                      <div
-                        key={log.id}
-                        className="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3 text-xs"
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <span
-                            className={`px-1.5 py-0.5 rounded text-[10px] font-mono shrink-0 font-medium ${
-                              log.actor === "USER"
-                                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
-                                : log.actor === "AGENT"
-                                  ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20"
-                                  : log.actor === "TELEGRAM"
-                                    ? "bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20"
-                                    : "bg-muted text-muted-foreground border border-border"
-                            }`}
-                          >
-                            {log.actor}
-                          </span>
-                          <span className="font-medium text-foreground truncate">
-                            {log.actionType.replace(/_/g, " ")}
-                          </span>
-                          <span className="text-[11px] text-muted-foreground font-mono truncate hidden sm:inline">
-                            &bull; {log.entityType}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className="text-[11px] text-muted-foreground">
-                            {new Date(log.createdAt).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                          <span
-                            className={`w-2 h-2 rounded-full ${
-                              log.status === "SUCCESS"
-                                ? "bg-emerald-500"
-                                : log.status === "FAILED"
-                                  ? "bg-red-500"
-                                  : "bg-amber-500"
-                            }`}
-                            title={log.status}
-                          />
-                        </div>
+            {/* Right 6 Cols: AI Copilot Launchpad Dock + Recent Compliance Activity */}
+            <div className="lg:col-span-6 flex flex-col justify-between space-y-4">
+              {/* Section 5: AI Copilot Launchpad Dock */}
+              <Card className="border border-border/80 shadow-2xs bg-card flex flex-col justify-between">
+                <CardHeader className="p-4 pb-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/20 text-primary-text">
+                        <Bot className="h-4 w-4" />
                       </div>
-                    ))}
+                      <CardTitle className="text-sm font-semibold text-foreground">
+                        AI Advisory Launchpad
+                      </CardTitle>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] text-primary-text border-primary/40 bg-primary/10"
+                    >
+                      Gemini 3.8 Flash
+                    </Badge>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                  <CardDescription className="text-xs text-muted-foreground mt-0.5">
+                    Autonomous financial reasoning over verified database
+                    records.
+                  </CardDescription>
+                </CardHeader>
+
+                <CardContent className="p-4 pt-2 space-y-2.5">
+                  <div className="rounded-xl border border-border/60 bg-muted/30 p-2.5 text-xs space-y-1.5">
+                    <span className="text-[10px] uppercase font-mono text-muted-foreground block font-semibold">
+                      Recommended Inquiries
+                    </span>
+                    <Link
+                      href="/copilot"
+                      className="block text-xs text-foreground hover:text-primary-text transition-colors truncate"
+                    >
+                      &bull; &ldquo;Can I afford to purchase ৳150,000 inventory
+                      on Day 10?&rdquo;
+                    </Link>
+                    <Link
+                      href="/copilot"
+                      className="block text-xs text-foreground hover:text-primary-text transition-colors truncate"
+                    >
+                      &bull; &ldquo;Who owes me the most money and which
+                      invoices are overdue?&rdquo;
+                    </Link>
+                  </div>
+
+                  <Link href="/copilot" className="block w-full">
+                    <Button
+                      size="sm"
+                      className="w-full text-xs h-8 bg-primary text-black hover:bg-primary/90 gap-1.5 font-medium"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Open Copilot Advisory
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+
+              {/* Section 6: Real-Time Audit & Compliance Stream */}
+              <Card className="border border-border/80 shadow-2xs bg-card flex flex-col justify-between flex-1">
+                <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between space-y-0">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-foreground">
+                      <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-sm font-semibold text-foreground">
+                        Recent Activity Log
+                      </CardTitle>
+                      <CardDescription className="text-xs text-muted-foreground">
+                        Append-only operational and compliance ledger.
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <Link href="/audit">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs text-muted-foreground hover:text-foreground gap-1 px-2"
+                    >
+                      View All <ArrowRight className="h-3 w-3" />
+                    </Button>
+                  </Link>
+                </CardHeader>
+                <CardContent className="p-4 pt-2">
+                  {recentAuditLogs.length === 0 ? (
+                    <div className="py-6 text-center text-xs text-muted-foreground">
+                      No recent audit events logged.
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-border/50 space-y-0">
+                      {recentAuditLogs.slice(0, 3).map((log) => (
+                        <div
+                          key={log.id}
+                          className="py-2 first:pt-0 last:pb-0 flex items-center justify-between gap-3 text-xs"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-mono shrink-0 font-medium ${
+                                log.actor === "USER"
+                                  ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
+                                  : log.actor === "AGENT"
+                                    ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20"
+                                    : log.actor === "TELEGRAM"
+                                      ? "bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20"
+                                      : "bg-muted text-muted-foreground border border-border"
+                              }`}
+                            >
+                              {log.actor}
+                            </span>
+                            <span className="font-medium text-foreground truncate">
+                              {log.actionType.replace(/_/g, " ")}
+                            </span>
+                            <span className="text-[11px] text-muted-foreground font-mono truncate hidden sm:inline">
+                              &bull; {log.entityType}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-[11px] text-muted-foreground">
+                              {new Date(log.createdAt).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                            <span
+                              className={`w-2 h-2 rounded-full ${
+                                log.status === "SUCCESS"
+                                  ? "bg-emerald-500"
+                                  : log.status === "FAILED"
+                                    ? "bg-red-500"
+                                    : "bg-amber-500"
+                              }`}
+                              title={log.status}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       )}
