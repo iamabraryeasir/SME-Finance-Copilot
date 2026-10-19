@@ -90,25 +90,26 @@ flowchart LR
 
 > **Core Objective:** Multi-step LangGraph agent orchestrator, 8 deterministic backend tools, Human-in-the-Loop action planner, and shared Telegram bot.
 
-- [ ] **LLM Provider Bridge:** Google Gemini 1.5 Flash (primary via `@langchain/google-genai`) with Groq Llama-3 failover (`@langchain/groq`).
-- [ ] **The 8 Mandatory Backend Tools:** Implement and strictly type all 8 tools:
-  1. `get_financial_summary`: Real-time KPI metrics.
-  2. `get_invoices`: Filtered and paginated invoice search.
-  3. `get_upcoming_payables`: Scheduled supplier obligations and overhead within $N$ days.
-  4. `get_upcoming_receivables`: Expected customer receipts within $N$ days.
-  5. `forecast_cash_balance`: 30-day daily projection and affordability simulation.
-  6. `get_financial_alerts`: Active risks with supporting attribution.
-  7. `create_reminder_draft`: Factual invoice reminder draft generation.
-  8. `record_action_status`: Recording explicit user approval/rejection.
-- [ ] **LangGraph StateGraph Engine:** Multi-step state machine managing conversational memory, tenancy context, and tool calling.
-- [ ] **Streaming Chat Route Handler:** `/api/chat` streaming SSE responses using Vercel AI SDK and `@ai-sdk/langchain`.
-- [ ] **Overdue Receivables Prioritizer:** Prioritization scoring based on days overdue, balance amount, and deficit urgency.
-- [ ] **Factual Reminder Generator:** LLM prompt guardrails restricting draft copy to verified database fields only.
-- [ ] **Human-in-the-Loop (HITL) Approval Flow:** Enforcing draft approval states (`DRAFT` $\rightarrow$ `PENDING_APPROVAL` $\rightarrow$ `APPROVED` | `REJECTED` $\rightarrow$ `SENT`).
-- [ ] **Telegram Bot Webhook (`/api/telegram/webhook`):** Telegram Bot API integration routing updates to the shared agent backend.
-- [ ] **Telegram Account Linking:** 6-digit cryptographic PIN pairing flow (`/link <code>`) resolving to Better Auth `userId`.
-- [ ] **Shared Telegram Copilot Capabilities:** Telegram commands (`/summary`, `/forecast`, `/alerts`), natural language chat, and invoice PDF upload handling.
-- [ ] **Immutable Audit Logger:** Append-only logging service recording all agent recommendations, tool calls, and user approvals in `AuditLog`.
+- [x] **LLM Provider Bridge:** Google Gemini 3.8 Flash primary (`@langchain/google-genai` and `@google/genai`) with Groq Llama-3.3-70B failover (`@langchain/groq`) implemented in `src/lib/ai/models.ts` with strict schema validation.
+- [x] **The 8 Mandatory Backend Tools:** Implemented, tested, and strictly typed in `src/lib/ai/tools/`:
+  1. `get_financial_summary`: Real-time KPI metrics (`src/lib/ai/tools/financial-summary.ts`).
+  2. `get_invoices`: Filtered and paginated invoice search (`src/lib/ai/tools/invoices.ts`).
+  3. `get_upcoming_payables`: Scheduled supplier obligations and overhead within $N$ days (`src/lib/ai/tools/upcoming-payables.ts`).
+  4. `get_upcoming_receivables`: Expected customer receipts within $N$ days (`src/lib/ai/tools/upcoming-receivables.ts`).
+  5. `forecast_cash_balance`: 30-day daily projection and affordability simulation (`src/lib/ai/tools/forecast-balance.ts`).
+  6. `get_financial_alerts`: Active risks with supporting attribution (`src/lib/ai/tools/financial-alerts.ts`).
+  7. `create_reminder_draft`: Factual invoice reminder draft generation (`src/lib/ai/tools/reminder-draft.ts`).
+  8. `record_action_status`: Recording explicit user approval/rejection (`src/lib/ai/tools/record-action.ts`).
+- [x] **LangGraph StateGraph Engine:** Multi-step state machine with cyclic tool calling, tenant isolation, and strict anti-hallucination prompts (`src/lib/ai/agent.ts`).
+- [x] **Streaming Chat Route Handler:** `/api/chat` streaming SSE responses using Vercel AI SDK, conversation session CRUD (`/api/conversations`), and Upstash Redis rate limiting.
+- [x] **Web Copilot Chat Interface:** Interactive copilot view (`src/components/dashboard/copilot-chat.tsx` & `src/app/(dashboard)/copilot/page.tsx`) with quick prompts, live message history, and HITL action cards.
+- [x] **Overdue Receivables Prioritizer:** Prioritization scoring based on days overdue, balance amount, and deficit urgency (`src/services/action-planner.ts` & `/api/actions`).
+- [x] **Factual Reminder Generator:** LLM prompt guardrails restricting draft copy to verified database fields only with tone escalation.
+- [x] **Human-in-the-Loop (HITL) Approval Flow:** Enforcing draft approval states (`DRAFT` $\rightarrow$ `PENDING_APPROVAL` $\rightarrow$ `APPROVED` | `REJECTED` $\rightarrow$ `SENT`) via `/api/actions/[id]` and inline Telegram buttons.
+- [x] **Telegram Bot Webhook (`/api/telegram/webhook`):** Telegram Bot API integration routing updates to the shared agent backend.
+- [x] **Telegram Account Linking:** 6-digit cryptographic PIN pairing flow (`/link <code>`) resolving to Better Auth `userId` (`src/services/telegram.ts`, `/api/telegram/pair`, and `src/components/dashboard/telegram-connection-card.tsx`).
+- [x] **Shared Telegram Copilot Capabilities:** Telegram commands (`/summary`, `/forecast`, `/alerts`, `/plan`), natural language chat, document ingestion with background Inngest OCR worker, and inline approval buttons.
+- [x] **Immutable Audit Logger:** Append-only logging service recording all agent recommendations, tool calls, and user approvals in `AuditLog` (`src/services/audit.ts`).
 
 ---
 
