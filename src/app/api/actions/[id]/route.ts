@@ -22,7 +22,7 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await req.json();
-    const { status, notes } = body;
+    const { status, notes, subject, content, recipientContact } = body;
 
     if (status !== "APPROVED" && status !== "REJECTED") {
       return NextResponse.json(
@@ -56,6 +56,11 @@ export async function PATCH(
         where: { id: draft.id },
         data: {
           status,
+          ...(subject ? { subject: String(subject).trim() } : {}),
+          ...(content ? { content: String(content).trim() } : {}),
+          ...(recipientContact
+            ? { recipientContact: String(recipientContact).trim() }
+            : {}),
           approvedBy: status === "APPROVED" ? session.user.id : null,
           approvedAt: status === "APPROVED" ? now : null,
           executedAt: status === "APPROVED" ? now : null,

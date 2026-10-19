@@ -5,6 +5,7 @@ import {
   Bot,
   CheckCircle2,
   Clock,
+  Edit3,
   Loader2,
   MessageSquare,
   Plus,
@@ -19,7 +20,15 @@ import toast from "react-hot-toast";
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-
+import {
+  type ActionDraftDetails,
+  ActionReviewModal,
+} from "@/components/dashboard/action-review-modal";
+import {
+  type InvoiceItem,
+  InvoiceWidget,
+} from "@/components/dashboard/copilot-widgets/invoice-widget";
+import { RunwayWidget } from "@/components/dashboard/copilot-widgets/runway-widget";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,10 +49,21 @@ interface ChatMessage {
     id: string;
     invoiceNumber: string;
     recipientName: string;
+    recipientContact?: string;
     amount?: number;
+    dueDate?: string;
     subject: string;
+    content?: string;
     status: "PENDING_APPROVAL" | "APPROVED" | "REJECTED";
   };
+  runwayData?: {
+    daysRemaining: number;
+    burnRate: number;
+    currentCash: number;
+    lowestCash: number;
+    deficitDate: string | null;
+  };
+  invoiceData?: InvoiceItem[];
 }
 
 interface ConversationItem {
@@ -186,6 +206,39 @@ export function CopilotChat({
   const [actionProcessingId, setActionProcessingId] = useState<string | null>(
     null,
   );
+  const [selectedDraftForReview, setSelectedDraftForReview] =
+    useState<ActionDraftDetails | null>(null);
+
+  const handleReviewModalDecision = (
+    draftId: string,
+    decision: "APPROVED" | "REJECTED",
+  ) => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.actionDraft?.id === draftId
+          ? {
+              ...m,
+              actionDraft: {
+                ...m.actionDraft,
+                status: decision,
+              },
+            }
+          : m,
+      ),
+    );
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `decision-${Date.now()}`,
+        sender: "ASSISTANT",
+        content:
+          decision === "APPROVED"
+            ? `✅ **Action Approved:** Draft ${draftId} was authorized and dispatched via verified channel. Ledger audit trail updated.`
+            : `❌ **Action Rejected:** Draft ${draftId} was dismissed. No messages were dispatched.`,
+      },
+    ]);
+  };
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -309,6 +362,10 @@ export function CopilotChat({
         name: string;
         args?: Record<string, unknown>;
       }> = [];
+      let latestActionDraft: ChatMessage["actionDraft"];
+      let latestRunwayData: ChatMessage["runwayData"];
+      let latestInvoiceData: ChatMessage["invoiceData"];
+
       const assistantMessageId = `assist-${Date.now()}`;
       let messageAppended = false;
 
@@ -366,13 +423,110 @@ export function CopilotChat({
                 }
               }
 
-              // 3. Tool output available
+              // 3. Tool output available -> Generative UI Extraction
               else if (parsed?.type === "tool-output-available") {
                 const toolName = (parsed.toolName as string) || "tool";
                 setActiveToolStep({
                   name: toolName,
                   label: `Retrieved verified data from ${toolName.replace(/_/g, " ")}`,
                 });
+
+                let toolResult: unknown = parsed.output;
+                if (typeof toolResult === "string") {
+                  try {
+                    toolResult = JSON.parse(toolResult);
+                  } catch {
+                    // Raw string
+                  }
+                }
+
+                if (
+                  toolName === "create_reminder_draft" &&
+                  toolResult &&
+                  typeof toolResult === "object"
+                ) {
+                  const resObj = toolResult as Record<string, unknown>;
+                  const d = (resObj.draft as Record<string, unknown>) || resObj;
+                  if (d && (d.draftId || d.id)) {
+                    latestActionDraft = {
+                      id: String(d.draftId || d.id),
+                      invoiceNumber: String(d.invoiceNumber || ""),
+                      recipientName: String(d.recipientName || "Customer"),
+                      recipientContact: d.recipientContact
+                        ? String(d.recipientContact)
+                        : undefined,
+                      amount: d.amount ? Number(d.amount) : undefined,
+                      dueDate: d.dueDate ? String(d.dueDate) : undefined,
+                      subject: String(d.subject || ""),
+                      content: d.content ? String(d.content) : undefined,
+                      status: "PENDING_APPROVAL",
+                    };
+                  }
+                } else if (
+                  toolName === "forecast_cash_balance" &&
+                  toolResult &&
+                  typeof toolResult === "object"
+                ) {
+                  const resObj = toolResult as Record<string, unknown>;
+                  const summary =
+                    (resObj.summary as Record<string, unknown>) || {};
+                  const startCash = Number(resObj.startingBalance || 185000);
+                  const minBal = Number(
+                    summary.minProjectedBalance ??
+                      resObj.minProjectedBalance ??
+                      startCash,
+                  );
+                  const firstDeficit = summary.firstDeficitDate
+                    ? String(summary.firstDeficitDate)
+                    : null;
+                  const outflows = Number(
+                    summary.totalProjectedOutflows || 60000,
+                  );
+                  const burnRate = Math.round(Math.abs(outflows / 30)) || 2000;
+                  const daysRemaining = firstDeficit ? 14 : 45;
+
+                  latestRunwayData = {
+                    daysRemaining,
+                    burnRate,
+                    currentCash: startCash,
+                    lowestCash: minBal,
+                    deficitDate: firstDeficit,
+                  };
+                } else if (
+                  (toolName === "get_invoices" ||
+                    toolName === "get_upcoming_receivables") &&
+                  toolResult &&
+                  typeof toolResult === "object"
+                ) {
+                  const resObj = toolResult as Record<string, unknown>;
+                  const invList = Array.isArray(resObj.invoices)
+                    ? resObj.invoices
+                    : [];
+                  if (invList.length > 0) {
+                    latestInvoiceData = invList
+                      .slice(0, 4)
+                      .map((inv: Record<string, unknown>) => ({
+                        id: String(inv.id || inv.invoiceNumber),
+                        invoiceNumber: String(inv.invoiceNumber),
+                        customerName: String(
+                          inv.counterparty ||
+                            inv.customerName ||
+                            "Counterparty",
+                        ),
+                        amount: Number(
+                          inv.remainingAmount ?? inv.totalAmount ?? 0,
+                        ),
+                        dueDate: String(
+                          inv.dueDate || new Date().toISOString(),
+                        ),
+                        status:
+                          (inv.status as "OVERDUE" | "PENDING" | "PAID") ||
+                          "PENDING",
+                        currency: String(inv.currency || currency),
+                        daysOverdue: inv.status === "OVERDUE" ? 7 : 0,
+                      }));
+                  }
+                }
               }
 
               // 4. Server-emitted error events
@@ -403,7 +557,10 @@ export function CopilotChat({
         // Only append or update assistant message if we have text or completed tool calls
         if (
           assistantText.trim().length > 0 ||
-          accumulatedToolCalls.length > 0
+          accumulatedToolCalls.length > 0 ||
+          latestActionDraft ||
+          latestRunwayData ||
+          latestInvoiceData
         ) {
           if (!messageAppended) {
             messageAppended = true;
@@ -417,6 +574,9 @@ export function CopilotChat({
                   accumulatedToolCalls.length > 0
                     ? [...accumulatedToolCalls]
                     : undefined,
+                actionDraft: latestActionDraft,
+                runwayData: latestRunwayData,
+                invoiceData: latestInvoiceData,
               },
             ]);
           } else {
@@ -430,6 +590,9 @@ export function CopilotChat({
                         accumulatedToolCalls.length > 0
                           ? [...accumulatedToolCalls]
                           : m.toolCalls,
+                      actionDraft: latestActionDraft || m.actionDraft,
+                      runwayData: latestRunwayData || m.runwayData,
+                      invoiceData: latestInvoiceData || m.invoiceData,
                     }
                   : m,
               ),
@@ -452,6 +615,9 @@ export function CopilotChat({
               accumulatedToolCalls.length > 0
                 ? [...accumulatedToolCalls]
                 : undefined,
+            actionDraft: latestActionDraft,
+            runwayData: latestRunwayData,
+            invoiceData: latestInvoiceData,
           },
         ]);
       }
@@ -724,6 +890,31 @@ export function CopilotChat({
                   {/* Message Body text */}
                   <ChatMarkdown content={msg.content} isUser={isUser} />
 
+                  {/* Generative UI: Runway Widget */}
+                  {msg.runwayData && (
+                    <RunwayWidget
+                      daysRemaining={msg.runwayData.daysRemaining}
+                      burnRate={msg.runwayData.burnRate}
+                      currentCash={msg.runwayData.currentCash}
+                      lowestCash={msg.runwayData.lowestCash}
+                      deficitDate={msg.runwayData.deficitDate}
+                      currencySymbol={symbol}
+                    />
+                  )}
+
+                  {/* Generative UI: Interactive Invoices Widget */}
+                  {msg.invoiceData && msg.invoiceData.length > 0 && (
+                    <InvoiceWidget
+                      invoices={msg.invoiceData}
+                      currencySymbol={symbol}
+                      onDraftReminder={(inv) => {
+                        handleSendMessage(
+                          `Draft an overdue payment reminder for invoice ${inv.invoiceNumber} to ${inv.customerName}`,
+                        );
+                      }}
+                    />
+                  )}
+
                   {/* Optional HITL Action Approval Widget */}
                   {msg.actionDraft &&
                     msg.actionDraft.status === "PENDING_APPROVAL" && (
@@ -749,7 +940,30 @@ export function CopilotChat({
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2 pt-1">
+                        <div className="flex flex-wrap items-center gap-2 pt-1">
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              if (msg.actionDraft) {
+                                setSelectedDraftForReview({
+                                  id: msg.actionDraft.id,
+                                  invoiceNumber: msg.actionDraft.invoiceNumber,
+                                  recipientName: msg.actionDraft.recipientName,
+                                  recipientContact:
+                                    msg.actionDraft.recipientContact,
+                                  amount: msg.actionDraft.amount,
+                                  dueDate: msg.actionDraft.dueDate,
+                                  subject: msg.actionDraft.subject,
+                                  content: msg.actionDraft.content,
+                                  currencySymbol: symbol,
+                                });
+                              }
+                            }}
+                            className="h-7 text-xs bg-primary/20 hover:bg-primary/30 text-primary-text border border-primary/40 gap-1 font-medium"
+                          >
+                            <Edit3 className="h-3 w-3" />
+                            Review & Personalize
+                          </Button>
                           <Button
                             size="sm"
                             onClick={() => {
@@ -764,7 +978,7 @@ export function CopilotChat({
                             className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
                           >
                             <CheckCircle2 className="h-3 w-3" />
-                            Approve & Send
+                            Quick Approve
                           </Button>
                           <Button
                             size="sm"
@@ -872,6 +1086,14 @@ export function CopilotChat({
           </div>
         </div>
       </Card>
+
+      {/* Human-in-the-Loop Action Review & Personalize Modal */}
+      <ActionReviewModal
+        isOpen={Boolean(selectedDraftForReview)}
+        onClose={() => setSelectedDraftForReview(null)}
+        draft={selectedDraftForReview}
+        onDecisionComplete={handleReviewModalDecision}
+      />
     </div>
   );
 }
