@@ -117,12 +117,12 @@ flowchart LR
 
 > **Core Objective:** High-density 6-section command center, Generative UI chat widgets, interactive HITL approval modals, and production audits.
 
-- [ ] **Section 1: Financial Overview:** 6 KPI metric cards with real-time figures, currency formatting (`৳`/`$`), and trend badges.
-- [ ] **Section 2: Cash-Flow Forecast Chart:** Interactive 30-day timeline chart with reserve threshold line, deficit zones, and transaction driver drawer.
-- [ ] **Section 3: Alerts & Recommended Actions Feed:** Prioritized cards with severity badges, root-cause breakdown, and inline action buttons.
+- [x] **Section 1: Financial Overview:** 6 KPI metric cards with real-time figures, currency formatting (`৳`/`$`), and trend badges.
+- [x] **Section 2: Cash-Flow Forecast Chart:** Interactive 30-day timeline chart with reserve threshold line, deficit zones, and transaction driver drawer.
+- [x] **Section 3: Alerts & Recommended Actions Feed:** Prioritized cards with severity badges, root-cause breakdown, and inline action buttons.
 - [x] **Section 4: Invoice Management Ledger:** Searchable, filterable AR/AP data table with partial payment progress, status chips, and action menus.
-- [ ] **Section 5: AI Copilot Chat Interface:** Docked streaming panel with quick prompt pills (_"Can I afford ৳200,000?"_, _"Who owes me most?"_) and Generative UI widgets (mini forecast charts, invoice reminder cards).
-- [ ] **Section 6: Activity & Security Audit Log View:** Auditable event timeline with actor icons (`USER`, `AGENT`, `SYSTEM`, `TELEGRAM`), action tags, and JSON payload inspection dialog.
-- [ ] **HITL Action Approval Modal:** Interactive review modal allowing the user to inspect, edit, and confirm or reject overdue reminder drafts.
-- [ ] **Telegram Account Pairing UI:** Settings panel allowing the user to generate a linking PIN and inspect connection status.
-- [ ] **Tenant Isolation & Security Audit:** Verifying strict `userId` scoping across every query, sanitizing PII in logs, and stress-testing edge boundaries.
+- [x] **Section 5: AI Copilot Chat Interface:** Docked streaming panel with quick prompt pills (_"Can I afford ৳200,000?"_, _"Who owes me most?"_) and Generative UI widgets (mini forecast charts, invoice reminder cards).
+- [x] **Section 6: Activity & Security Audit Log View:** Auditable event timeline (`/audit` & Dashboard stream) with actor icons (`USER`, `AGENT`, `SYSTEM`, `TELEGRAM`), action tags, and JSON payload inspection dialog.
+- [x] **HITL Action Approval Modal:** Interactive review modal (`src/components/dashboard/action-review-modal.tsx`) allowing the user to inspect, edit tone/subject/body, and confirm or reject overdue reminder drafts.
+- [x] **Telegram Account Pairing UI:** Settings panel allowing the user to generate a linking PIN and inspect connection status (`src/components/dashboard/telegram-connection-card.tsx`).
+- [x] **Tenant Isolation & Security Audit:** Verified strict `userId` scoping across every query, sanitizing PII in logs, zero mental arithmetic, and stress-testing edge boundaries.
