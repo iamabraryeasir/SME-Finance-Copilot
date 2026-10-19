@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import type { SimulationResult } from "@/services/simulation";
 
 interface ScenarioSimulatorProps {
@@ -213,17 +214,17 @@ export function ScenarioSimulator({
                 Day 1 = Today
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <input
+            <div className="flex items-center gap-3 pt-1">
+              <Slider
                 id="scenario-day"
-                type="range"
-                min="1"
-                max="30"
+                min={1}
+                max={30}
+                step={1}
                 value={dayIndex}
-                onChange={(e) => setDayIndex(Number(e.target.value))}
-                className="w-full accent-primary h-2 bg-muted rounded-lg cursor-pointer"
+                onValueChange={(val) => setDayIndex(val)}
+                className="flex-1"
               />
-              <span className="text-xs font-mono font-medium w-8 text-right">
+              <span className="text-xs font-mono font-medium min-w-9 text-center text-foreground bg-muted/60 px-1.5 py-0.5 rounded border border-border/40">
                 {dayIndex}d
               </span>
             </div>
@@ -239,18 +240,17 @@ export function ScenarioSimulator({
                 Stress Test
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <input
+            <div className="flex items-center gap-3 pt-1">
+              <Slider
                 id="scenario-delay"
-                type="range"
-                min="0"
-                max="30"
-                step="2"
+                min={0}
+                max={30}
+                step={2}
                 value={overrideDelay}
-                onChange={(e) => setOverrideDelay(Number(e.target.value))}
-                className="w-full accent-primary h-2 bg-muted rounded-lg cursor-pointer"
+                onValueChange={(val) => setOverrideDelay(val)}
+                className="flex-1"
               />
-              <span className="text-xs font-mono font-medium w-8 text-right">
+              <span className="text-xs font-mono font-medium min-w-10 text-center text-foreground bg-muted/60 px-1.5 py-0.5 rounded border border-border/40">
                 +{overrideDelay}d
               </span>
             </div>
