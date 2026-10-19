@@ -47,8 +47,12 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Skip auth API endpoints from session redirect checks (protected by rate limiting above)
-  if (pathname.startsWith("/api/auth")) {
+  // Skip non-session endpoints (Inngest worker sync, Telegram webhook, and Auth API)
+  if (
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/inngest") ||
+    pathname.startsWith("/api/telegram/webhook")
+  ) {
     return NextResponse.next();
   }
 
