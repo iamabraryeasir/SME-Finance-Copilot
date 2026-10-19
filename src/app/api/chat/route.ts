@@ -12,6 +12,7 @@ import { createFinancialAgent } from "@/lib/ai/agent";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redis } from "@/lib/redis";
+import { recordAiTelemetry } from "@/services/telemetry";
 
 export async function POST(req: Request) {
   try {
@@ -185,6 +186,42 @@ export async function POST(req: Request) {
             await prisma.conversation.update({
               where: { id: conversationId },
               data: { updatedAt: new Date() },
+            });
+
+            // Track AI telemetry atomically
+            const promptChars = langchainMessages.reduce(
+              (acc, m) =>
+                acc + (typeof m.content === "string" ? m.content.length : 0),
+              0,
+            );
+            const promptTokens = Math.max(100, Math.ceil(promptChars / 4));
+            const completionTokens = Math.max(
+              20,
+              Math.ceil(assistantContent.length / 4),
+            );
+            const totalTokens = promptTokens + completionTokens;
+
+            const toolsList: string[] = [];
+            if (Array.isArray(toolCallsData)) {
+              for (const tc of toolCallsData) {
+                if (
+                  tc &&
+                  typeof tc === "object" &&
+                  "name" in tc &&
+                  typeof tc.name === "string"
+                ) {
+                  toolsList.push(tc.name);
+                }
+              }
+            }
+
+            await recordAiTelemetry({
+              userId,
+              model: "gemini-3.8-flash",
+              promptTokens,
+              completionTokens,
+              totalTokens,
+              toolsUsed: toolsList,
             });
           }
         } catch (err) {
