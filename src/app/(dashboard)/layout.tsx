@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { useState } from "react";
 import { DashboardHeader } from "@/components/dashboard/header";
 import { DashboardSidebar } from "@/components/dashboard/sidebar";
+import { cn } from "@/lib/utils";
 
 export default function DashboardLayout({
   children,
@@ -11,13 +12,42 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isManuallyClosed, setIsManuallyClosed] = useState(false);
+
+  // Closed by default: shows icon-only rail (w-16)
+  // On hover: expands to full sidebar (w-64)
+  const isExpanded = isHovered && !isManuallyClosed;
+
+  const handleMinimize = () => {
+    setIsManuallyClosed(true);
+    setIsHovered(false);
+  };
+
+  const handleMouseEnter = () => {
+    setIsManuallyClosed(false);
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    setIsManuallyClosed(false);
+  };
 
   return (
-    <div className="flex min-h-screen bg-muted/40 text-foreground">
-      {/* Desktop Persistent Sidebar */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col z-40">
-        <DashboardSidebar />
-      </div>
+    <div className="relative min-h-screen bg-background text-foreground flex flex-col">
+      {/* Desktop Persistent Sidebar (Icon rail by default, expands to full on hover) */}
+      <aside
+        aria-label="Sidebar navigation"
+        className={cn(
+          "hidden lg:flex fixed inset-y-0 left-0 z-40 flex-col border-r border-border bg-card transition-all duration-300 ease-in-out",
+          isExpanded ? "w-64 shadow-2xl" : "w-16 shadow-none",
+        )}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <DashboardSidebar isExpanded={isExpanded} onMinimize={handleMinimize} />
+      </aside>
 
       {/* Mobile Slide-over Drawer */}
       {mobileMenuOpen && (
@@ -46,18 +76,24 @@ export default function DashboardLayout({
                   <X className="h-4 w-4" />
                 </button>
               </div>
-              <DashboardSidebar onNavClick={() => setMobileMenuOpen(false)} />
+              <DashboardSidebar
+                isExpanded={true}
+                onNavClick={() => setMobileMenuOpen(false)}
+              />
             </div>
           </div>
         </div>
       )}
 
-      {/* Main Content Area */}
-      <div className="flex flex-1 flex-col lg:pl-64 min-w-0">
+      {/* Main Content Area: Dynamically adjusts width between lg:pl-16 (closed) and lg:pl-64 (open), full width without max-w bottleneck */}
+      <div
+        className={cn(
+          "flex flex-1 flex-col min-w-0 transition-all duration-300 ease-in-out",
+          isExpanded ? "lg:pl-64" : "lg:pl-16",
+        )}
+      >
         <DashboardHeader onMenuToggle={() => setMobileMenuOpen(true)} />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
-          {children}
-        </main>
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 w-full">{children}</main>
       </div>
     </div>
   );

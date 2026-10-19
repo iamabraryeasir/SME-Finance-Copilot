@@ -148,7 +148,7 @@ export function IngestionApprovalModal({
         {/* Modal Header */}
         <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-muted/20">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-primary/20 text-primary-text flex items-center justify-center">
               <FileSpreadsheet className="w-5 h-5" />
             </div>
             <div>
@@ -245,7 +245,7 @@ export function IngestionApprovalModal({
                         selectedIds.size === rows.length && rows.length > 0
                       }
                       onChange={handleToggleSelectAll}
-                      className="rounded border-border text-primary focus:ring-primary w-3.5 h-3.5"
+                      className="rounded border-border accent-secondary w-3.5 h-3.5"
                     />
                   </th>
                   <th className="py-2.5 px-3">Type</th>
@@ -288,7 +288,7 @@ export function IngestionApprovalModal({
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => handleToggleRow(row.id)}
-                            className="rounded border-border text-primary focus:ring-primary w-3.5 h-3.5"
+                            className="rounded border-border accent-secondary w-3.5 h-3.5"
                           />
                         </td>
                         <td className="py-2.5 px-3">

@@ -211,7 +211,7 @@ export function RecurringSchedulesCard({
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <CardTitle className="text-base flex items-center gap-2">
-                <Repeat className="h-4 w-4 text-primary" />
+                <Repeat className="h-4 w-4 text-primary-text" />
                 Recurring Overhead & Fixed Commitments
               </CardTitle>
               <Badge variant="secondary" className="text-xs font-mono">
@@ -256,7 +256,7 @@ export function RecurringSchedulesCard({
             className="p-4 rounded-lg border border-primary/30 bg-primary/5 space-y-4 text-xs"
           >
             <div className="font-semibold text-foreground text-sm flex items-center gap-2">
-              <Plus className="h-4 w-4 text-primary" />
+              <Plus className="h-4 w-4 text-primary-text" />
               Configure New Overhead Commitment
             </div>
 
@@ -397,7 +397,7 @@ export function RecurringSchedulesCard({
         {/* Commitment Items List */}
         {isLoading ? (
           <div className="py-8 flex justify-center items-center text-muted-foreground gap-2 text-xs">
-            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+            <Loader2 className="h-4 w-4 animate-spin text-primary-text" />
             Loading commitments...
           </div>
         ) : items.length === 0 ? (

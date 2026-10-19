@@ -443,7 +443,7 @@ export function InvoiceLedgerTable({
             onValueChange={(val) => handleMonthChange(val || "ALL")}
           >
             <SelectTrigger className="h-8 text-xs gap-1.5 bg-background border-border font-medium">
-              <Calendar className="w-3.5 h-3.5 text-primary shrink-0" />
+              <Calendar className="w-3.5 h-3.5 text-primary-text shrink-0" />
               <SelectValue placeholder="All Billing Months">
                 {(val) => {
                   if (!val || val === "ALL") return "All Billing Months";
@@ -577,7 +577,7 @@ export function InvoiceLedgerTable({
                       invoices.length > 0
                     }
                     onChange={handleToggleSelectAll}
-                    className="rounded border-border text-primary focus:ring-primary w-3.5 h-3.5"
+                    className="rounded border-border accent-secondary w-3.5 h-3.5"
                   />
                 </th>
                 <th className="py-3 px-3">Invoice #</th>
@@ -597,7 +597,7 @@ export function InvoiceLedgerTable({
                 <tr>
                   <td colSpan={11} className="py-12 text-center">
                     <div className="flex flex-col items-center justify-center gap-2">
-                      <RefreshCw className="w-5 h-5 animate-spin text-primary" />
+                      <RefreshCw className="w-5 h-5 animate-spin text-primary-text" />
                       <span className="text-xs text-muted-foreground">
                         Loading persistent ledger from PostgreSQL...
                       </span>
@@ -643,7 +643,7 @@ export function InvoiceLedgerTable({
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => handleToggleRow(inv.id)}
-                          className="rounded border-border text-primary focus:ring-primary w-3.5 h-3.5"
+                          className="rounded border-border accent-secondary w-3.5 h-3.5"
                         />
                       </td>
                       <td className="py-3 px-3 font-mono font-medium text-foreground">

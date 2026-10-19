@@ -339,7 +339,7 @@ export function UploadDropzone({
             }}
           />
 
-          <div className="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-4">
+          <div className="w-14 h-14 rounded-full bg-primary/20 text-primary-text flex items-center justify-center mb-4">
             <UploadCloud className="w-7 h-7" />
           </div>
 
@@ -384,7 +384,7 @@ export function UploadDropzone({
         stage === "validating" ||
         stage === "persisting") && (
         <div className="border border-border rounded-xl p-8 bg-card flex flex-col items-center justify-center text-center">
-          <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-4 animate-spin">
+          <div className="w-12 h-12 rounded-full bg-primary/20 text-primary-text flex items-center justify-center mb-4 animate-spin">
             <RefreshCw className="w-6 h-6" />
           </div>
           <h4 className="text-sm font-semibold text-foreground mb-1">
@@ -393,7 +393,7 @@ export function UploadDropzone({
           <p className="text-xs text-muted-foreground mb-3">{statusText}</p>
           {selectedFiles[0] && (
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted text-xs font-medium text-foreground">
-              <FileSpreadsheet className="w-4 h-4 text-primary" />
+              <FileSpreadsheet className="w-4 h-4 text-primary-text" />
               <span>{selectedFiles[0].name}</span>
               <span className="text-muted-foreground">
                 ({(selectedFiles[0].size / 1024).toFixed(1)} KB)
@@ -506,7 +506,7 @@ export function UploadDropzone({
         <div className="border border-primary/30 bg-primary/5 rounded-xl p-6 flex flex-col gap-4">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/20 text-primary flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-primary/20 text-primary-text flex items-center justify-center">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
               <div>
@@ -551,7 +551,7 @@ export function UploadDropzone({
                 key={name}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-card border border-border text-xs font-mono text-foreground"
               >
-                <FileSpreadsheet className="w-3 h-3 text-primary" />
+                <FileSpreadsheet className="w-3 h-3 text-primary-text" />
                 {name}
               </span>
             ))}

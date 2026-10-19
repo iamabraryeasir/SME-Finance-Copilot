@@ -171,6 +171,156 @@ export default function AlertsPage() {
     }
   };
 
+  const renderAttribution = (supportingData: Record<string, unknown>) => {
+    // 1. Array of driving invoices (e.g. Overdue Receivables Rule)
+    if (
+      Array.isArray(supportingData.invoices) &&
+      supportingData.invoices.length > 0
+    ) {
+      const invoices = supportingData.invoices as Array<{
+        id?: string;
+        invoiceNumber?: string;
+        counterparty?: string;
+        amount?: number;
+        dueDate?: string;
+      }>;
+
+      return (
+        <div className="space-y-1.5 w-full">
+          <div className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1.5">
+            <FileText className="h-3.5 w-3.5 text-primary-text" />
+            <span>Contributing Invoices ({invoices.length}):</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {invoices.map((inv, idx) => (
+              <div
+                key={inv.id || inv.invoiceNumber || idx}
+                className="bg-background px-2.5 py-1 rounded-md border border-border text-foreground flex items-center gap-2 text-xs font-sans shadow-2xs"
+              >
+                <span className="font-mono font-bold text-primary-text">
+                  {inv.invoiceNumber || "Invoice"}
+                </span>
+                <span className="text-muted-foreground/60">•</span>
+                <span className="font-medium text-foreground">
+                  {inv.counterparty || "Counterparty"}
+                </span>
+                {inv.amount !== undefined && (
+                  <>
+                    <span className="text-muted-foreground/60">•</span>
+                    <span className="font-semibold text-destructive font-mono">
+                      ৳
+                      {Number(inv.amount).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                      })}
+                    </span>
+                  </>
+                )}
+                {inv.dueDate && (
+                  <span className="text-[10px] text-muted-foreground font-mono">
+                    (Due {inv.dueDate})
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // 2. Single target invoice (e.g. Upcoming Payable, Unusual Expense)
+    if (supportingData.invoiceNumber || supportingData.counterparty) {
+      return (
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1.5">
+            <FileText className="h-3.5 w-3.5 text-primary-text" />
+            <span>Target Invoice:</span>
+          </span>
+          <div className="bg-background px-2.5 py-1 rounded-md border border-border text-foreground flex items-center gap-2 text-xs font-sans shadow-2xs">
+            {Boolean(supportingData.invoiceNumber) && (
+              <span className="font-mono font-bold text-primary-text">
+                {String(supportingData.invoiceNumber)}
+              </span>
+            )}
+            {Boolean(supportingData.counterparty) && (
+              <>
+                <span className="text-muted-foreground/60">•</span>
+                <span className="font-medium text-foreground">
+                  {String(supportingData.counterparty)}
+                </span>
+              </>
+            )}
+            {supportingData.amount !== undefined && (
+              <>
+                <span className="text-muted-foreground/60">•</span>
+                <span className="font-semibold text-foreground font-mono">
+                  ৳
+                  {Number(supportingData.amount).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                  })}
+                </span>
+              </>
+            )}
+            {Boolean(supportingData.dueDate) && (
+              <span className="text-[10px] text-muted-foreground font-mono">
+                (Due {String(supportingData.dueDate)})
+              </span>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // 3. General structured key-value attribution metrics
+    const entries = Object.entries(supportingData).filter(
+      ([key, value]) =>
+        key !== "invoiceId" &&
+        key !== "dedupKey" &&
+        typeof value !== "object" &&
+        value !== null &&
+        value !== undefined,
+    );
+
+    if (entries.length === 0) return null;
+
+    return (
+      <div className="flex flex-wrap items-center gap-2 text-xs">
+        <span className="text-[11px] font-semibold text-muted-foreground">
+          Attribution:
+        </span>
+        {entries.map(([key, value]) => {
+          const label = key
+            .replace(/([A-Z])/g, " $1")
+            .replace(/^./, (s) => s.toUpperCase());
+
+          let displayVal = String(value);
+          if (typeof value === "number") {
+            const isCurrency =
+              key.toLowerCase().includes("balance") ||
+              key.toLowerCase().includes("cash") ||
+              key.toLowerCase().includes("reserve") ||
+              key.toLowerCase().includes("shortfall") ||
+              key.toLowerCase().includes("amount");
+            displayVal = isCurrency
+              ? `৳${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+              : value.toLocaleString();
+          }
+
+          return (
+            <span
+              key={key}
+              className="bg-background px-2 py-0.5 rounded border border-border text-foreground text-[11px] font-mono shadow-2xs"
+            >
+              <strong className="text-muted-foreground font-sans">
+                {label}:
+              </strong>{" "}
+              {displayVal}
+            </span>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
@@ -363,7 +513,7 @@ export default function AlertsPage() {
       {/* Alerts Stream List */}
       {isLoading ? (
         <div className="py-20 flex flex-col items-center justify-center gap-2 text-muted-foreground">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <Loader2 className="h-6 w-6 animate-spin text-primary-text" />
           <p className="text-xs">Evaluating risk rules...</p>
         </div>
       ) : alerts.length === 0 ? (
@@ -451,7 +601,7 @@ export default function AlertsPage() {
                   {/* Action Recommendation Box */}
                   {alert.suggestedAction && (
                     <div className="rounded-lg p-3 bg-background border border-border/70 flex items-start gap-2.5 text-xs">
-                      <div className="p-1 rounded-md bg-primary/10 text-primary shrink-0 mt-0.5">
+                      <div className="p-1 rounded-md bg-primary/20 text-primary-text shrink-0 mt-0.5">
                         <ArrowRight className="h-3.5 w-3.5" />
                       </div>
                       <div className="space-y-0.5">
@@ -467,21 +617,8 @@ export default function AlertsPage() {
 
                   {/* Supporting Attribution Data (if invoice linked) */}
                   {alert.supportingData && (
-                    <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground bg-muted/40 px-3 py-1.5 rounded-md border border-border/50 font-mono">
-                      <span>Attribution:</span>
-                      {Object.entries(alert.supportingData).map(
-                        ([key, value]) => {
-                          if (key === "invoiceId") return null;
-                          return (
-                            <span
-                              key={key}
-                              className="bg-background px-1.5 py-0.5 rounded border border-border text-foreground"
-                            >
-                              <strong>{key}:</strong> {String(value)}
-                            </span>
-                          );
-                        },
-                      )}
+                    <div className="rounded-lg p-2.5 bg-muted/30 border border-border/50 text-xs">
+                      {renderAttribution(alert.supportingData)}
                     </div>
                   )}
 

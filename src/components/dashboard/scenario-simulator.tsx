@@ -116,7 +116,7 @@ export function ScenarioSimulator({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="space-y-1">
             <CardTitle className="text-lg flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
+              <Sparkles className="h-5 w-5 text-primary-text" />
               What-If Affordability Simulator
             </CardTitle>
             <CardDescription>

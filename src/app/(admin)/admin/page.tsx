@@ -57,7 +57,7 @@ export default function AdminDashboardPage() {
               </p>
               <p>
                 <span className="font-semibold">Role:</span>{" "}
-                <span className="capitalize font-semibold text-primary">
+                <span className="capitalize font-semibold text-primary-text">
                   {session.user.role || "admin"}
                 </span>
               </p>

@@ -185,7 +185,7 @@ export function LedgerDistributionChart({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="space-y-1">
             <CardTitle className="text-base flex items-center gap-2">
-              <PieChart className="h-4 w-4 text-primary" />
+              <PieChart className="h-4 w-4 text-primary-text" />
               Liquidity Obligation Distribution
             </CardTitle>
             <CardDescription className="text-xs">

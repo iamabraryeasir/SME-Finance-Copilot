@@ -52,7 +52,7 @@ export default function InvoicesPage() {
         <div className="p-5 rounded-xl border border-primary/20 bg-primary/2 space-y-3 animate-in fade-in duration-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <UploadCloud className="w-4 h-4 text-primary" />
+              <UploadCloud className="w-4 h-4 text-primary-text" />
               <h3 className="text-sm font-semibold text-foreground">
                 Ingest New Master Ledger
               </h3>

@@ -84,7 +84,7 @@ export default function ForecastPage() {
             </h1>
             {fromCache && (
               <Badge variant="outline" className="text-[10px] gap-1 py-0.5">
-                <Database className="h-3 w-3 text-primary" />
+                <Database className="h-3 w-3 text-primary-text" />
                 Cached (1h TTL)
               </Badge>
             )}
@@ -115,7 +115,7 @@ export default function ForecastPage() {
       {/* Main Content */}
       {isLoading ? (
         <div className="py-24 flex flex-col items-center justify-center gap-3 text-muted-foreground">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <Loader2 className="h-8 w-8 animate-spin text-primary-text" />
           <p className="text-sm">Calculating 30-day cash curves...</p>
         </div>
       ) : !forecastData ? (
@@ -143,7 +143,7 @@ export default function ForecastPage() {
                 <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Current Cash Balance
                 </CardTitle>
-                <div className="p-1.5 rounded-md bg-primary/10 text-primary">
+                <div className="p-1.5 rounded-md bg-primary/20 text-primary-text">
                   <Wallet className="h-4 w-4" />
                 </div>
               </CardHeader>

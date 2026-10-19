@@ -34,6 +34,8 @@ interface ProfileData {
   expenseBaselineMonthly?: number | null;
 }
 
+import { TelegramConnectionCard } from "@/components/dashboard/telegram-connection-card";
+
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -80,6 +82,8 @@ export default function SettingsPage() {
           parameters.
         </p>
       </div>
+
+      <TelegramConnectionCard />
 
       <SettingsForm initialData={profile} />
     </div>
@@ -154,7 +158,7 @@ function SettingsForm({ initialData }: { initialData: ProfileData | null }) {
       <Card className="border-border/80 bg-card shadow-2xs">
         <CardHeader className="border-b border-border/60 py-3 px-5">
           <div className="flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-primary" />
+            <Building2 className="h-4 w-4 text-primary-text" />
             <CardTitle className="text-sm font-semibold">
               Business Profile
             </CardTitle>
@@ -255,7 +259,7 @@ function SettingsForm({ initialData }: { initialData: ProfileData | null }) {
       <Card className="border-border/80 bg-card shadow-2xs">
         <CardHeader className="border-b border-border/60 py-3 px-5">
           <div className="flex items-center gap-2">
-            <Coins className="h-4 w-4 text-primary" />
+            <Coins className="h-4 w-4 text-primary-text" />
             <CardTitle className="text-sm font-semibold">
               Cash Baseline & Reserve Floor
             </CardTitle>
@@ -348,7 +352,7 @@ function SettingsForm({ initialData }: { initialData: ProfileData | null }) {
       <Card className="border-border/80 bg-card shadow-2xs">
         <CardHeader className="border-b border-border/60 py-3 px-5">
           <div className="flex items-center gap-2">
-            <SlidersHorizontal className="h-4 w-4 text-primary" />
+            <SlidersHorizontal className="h-4 w-4 text-primary-text" />
             <CardTitle className="text-sm font-semibold">
               Forecasting Parameters
             </CardTitle>

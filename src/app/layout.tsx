@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter } from "next/font/google";
+import { Geist, Geist_Mono, Inter, Newsreader } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/toaster";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+
+const newsreader = Newsreader({
+  subsets: ["latin"],
+  variable: "--font-serif",
+  style: ["normal", "italic"],
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,8 +23,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SME Finance Copilot",
-  description: "SME Finance Copilot",
+  title: "CashPilot AI - SME Financial Intelligence",
+  description:
+    "Agentic AI for SME Financial Management & Liquidity Command Center",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -30,8 +37,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         "antialiased",
         geistSans.variable,
         geistMono.variable,
-        "font-sans",
         inter.variable,
+        newsreader.variable,
+        "font-sans",
       )}
     >
       <body className="min-h-full flex flex-col">

@@ -171,7 +171,7 @@ export default function SignInPage() {
             Don&apos;t have an account?{" "}
             <Link
               href="/sign-up"
-              className="text-primary font-medium hover:underline"
+              className="text-primary-text font-semibold hover:underline"
             >
               Sign up
             </Link>

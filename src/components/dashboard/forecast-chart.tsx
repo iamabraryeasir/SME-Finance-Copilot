@@ -473,7 +473,7 @@ export function ForecastChart({
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
               <CardTitle className="text-lg flex items-center gap-2">
-                <Activity className="h-5 w-5 text-primary" />
+                <Activity className="h-5 w-5 text-primary-text" />
                 30-Day Liquidity Runway
               </CardTitle>
 

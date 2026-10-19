@@ -70,7 +70,7 @@ export function DashboardHeader({ onMenuToggle }: HeaderProps) {
           href="/copilot"
           className="flex items-center gap-1.5 rounded-lg border border-border/80 bg-background/60 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-foreground/30 hover:bg-muted/40"
         >
-          <Bot className="h-3.5 w-3.5 text-primary" />
+          <Bot className="h-3.5 w-3.5 text-primary-text" />
           <span>AI Copilot</span>
         </Link>
 
@@ -86,7 +86,7 @@ export function DashboardHeader({ onMenuToggle }: HeaderProps) {
 
         {/* User Avatar Circle */}
         <div className="flex items-center pl-3 border-l border-border/60">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-xs ring-1 ring-primary/20">
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-primary-text font-bold text-xs ring-1 ring-primary/40">
             {userInitials}
           </div>
         </div>
