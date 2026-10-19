@@ -1,8 +1,17 @@
 "use client";
 
-import { Bell, Bot, ChevronRight, Menu } from "lucide-react";
+import {
+  ArrowLeftRight,
+  Bell,
+  Bot,
+  ChevronRight,
+  Menu,
+  Shield,
+  ShieldCheck,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 
@@ -16,17 +25,20 @@ const routeTitles: Record<string, { group: string; title: string }> = {
   "/forecast": { group: "Operations", title: "Cash-Flow Forecast" },
   "/alerts": { group: "Operations", title: "Risk Alerts" },
   "/copilot": { group: "Intelligence", title: "AI Copilot" },
+  "/audit": { group: "Governance", title: "Audit & Security" },
   "/settings": { group: "Configuration", title: "Financial Settings" },
-  "/admin": { group: "Administration", title: "Admin Console" },
+  "/admin": { group: "Administration", title: "System Monitor & Security" },
 };
 
 export function DashboardHeader({ onMenuToggle }: HeaderProps) {
   const pathname = usePathname();
   const { data: session } = authClient.useSession();
+  const isAdmin = session?.user?.role === "admin";
+  const isOnAdminRoute = pathname.startsWith("/admin");
 
   const currentRoute = routeTitles[pathname] || {
-    group: "Configuration",
-    title: "Financial Settings",
+    group: isOnAdminRoute ? "Administration" : "Configuration",
+    title: isOnAdminRoute ? "System Monitor & Security" : "Financial Settings",
   };
 
   const userInitials =
@@ -63,8 +75,39 @@ export function DashboardHeader({ onMenuToggle }: HeaderProps) {
         </div>
       </div>
 
-      {/* Right: Copilot Link, Notification Bell & User Avatar */}
+      {/* Right: Context Switcher, Copilot Link, Notification Bell & User Avatar */}
       <div className="flex items-center gap-2 sm:gap-3">
+        {/* Role-Based Context Switcher for Admin */}
+        {isAdmin &&
+          (isOnAdminRoute ? (
+            <div className="flex items-center gap-2">
+              <Badge
+                variant="outline"
+                className="hidden md:inline-flex items-center gap-1 text-[10px] font-mono border-primary/30 bg-primary/10 text-primary-text px-2 py-0.5"
+              >
+                <ShieldCheck className="h-3 w-3" />
+                Security Monitor
+              </Badge>
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-1.5 rounded-lg border border-border/80 bg-background/60 px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-foreground/30 hover:bg-muted/40"
+                title="Switch to SME Tenant Financial View"
+              >
+                <ArrowLeftRight className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="hidden sm:inline">SME Tenant View</span>
+              </Link>
+            </div>
+          ) : (
+            <Link
+              href="/admin"
+              className="flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-2.5 py-1.5 text-xs font-medium text-primary-text transition-colors hover:bg-primary/20"
+              title="Switch to Admin Platform System Monitor"
+            >
+              <Shield className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Admin Monitor</span>
+            </Link>
+          ))}
+
         {/* Link to Copilot Button */}
         <Link
           href="/copilot"

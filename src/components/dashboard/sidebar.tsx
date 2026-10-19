@@ -5,7 +5,6 @@ import {
   LayoutDashboard,
   LogOut,
   PanelLeftClose,
-  Shield,
   ShieldCheck,
   SlidersHorizontal,
 } from "lucide-react";
@@ -319,21 +318,21 @@ export function DashboardSidebar({
                 <Link
                   href="/admin"
                   onClick={onNavClick}
-                  title="Admin Console"
+                  title="System Monitor & Security"
                   className={cn(
                     "flex items-center rounded-xl text-xs font-medium transition-colors",
                     isExpanded
                       ? "justify-between px-3 py-2"
                       : "justify-center h-10 w-10 mx-auto",
-                    pathname === "/admin"
-                      ? "bg-primary text-primary-foreground font-semibold"
+                    pathname === "/admin" || pathname.startsWith("/admin/")
+                      ? "bg-primary text-primary-foreground font-semibold shadow-2xs"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground",
                   )}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <Shield className="h-4 w-4 shrink-0 text-current" />
+                    <ShieldCheck className="h-4 w-4 shrink-0 text-current" />
                     {isExpanded && (
-                      <span className="truncate">Admin Console</span>
+                      <span className="truncate">System Monitor</span>
                     )}
                   </div>
                 </Link>
@@ -361,39 +360,69 @@ export function DashboardSidebar({
             )}
           </div>
         ) : isExpanded ? (
-          <div className="flex items-center justify-between rounded-xl border border-border bg-[#F9F9F6] dark:bg-muted/40 p-2.5 shadow-2xs">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-xs ring-1 ring-primary/30">
-                {userInitials}
+          <div className="flex flex-col gap-2 rounded-xl border border-border bg-[#F9F9F6] dark:bg-muted/40 p-2.5 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-xs ring-1 ring-primary/30">
+                  {userInitials}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-semibold text-foreground leading-tight">
+                    {session?.user?.name || "Rahman Trading"}
+                  </p>
+                  <p className="truncate text-[10px] text-muted-foreground font-mono">
+                    {session?.user?.role === "admin"
+                      ? pathname.startsWith("/admin")
+                        ? "Admin Context"
+                        : "SME Tenant View"
+                      : "SME Owner"}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-semibold text-foreground leading-tight">
-                  {session?.user?.name || "Rahman Trading"}
-                </p>
-                <p className="truncate text-[10px] text-muted-foreground font-sans">
-                  {session?.user?.role === "admin"
-                    ? "Admin access"
-                    : "Owner access"}
-                </p>
-              </div>
+
+              {/* Sign Out Button */}
+              <button
+                type="button"
+                onClick={handleSignOut}
+                title="Sign Out"
+                aria-label="Sign out of account"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+              </button>
             </div>
 
-            {/* Sign Out Button */}
-            <button
-              type="button"
-              onClick={handleSignOut}
-              title="Sign Out"
-              aria-label="Sign out of account"
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-            </button>
+            {/* Quick Context Switcher for Admin */}
+            {session?.user?.role === "admin" && (
+              <div className="pt-1.5 border-t border-border/60 flex items-center justify-between text-[10px]">
+                <span className="text-muted-foreground font-mono">
+                  {pathname.startsWith("/admin")
+                    ? "System Mode"
+                    : "Tenant Mode"}
+                </span>
+                <Link
+                  href={pathname.startsWith("/admin") ? "/dashboard" : "/admin"}
+                  onClick={onNavClick}
+                  className="font-semibold text-primary-text hover:underline flex items-center gap-1"
+                >
+                  {pathname.startsWith("/admin")
+                    ? "Go to SME View →"
+                    : "Go to Monitor →"}
+                </Link>
+              </div>
+            )}
           </div>
         ) : (
           <div className="flex justify-center">
             <div
               className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-xs ring-1 ring-primary/30 cursor-pointer"
-              title={`${session?.user?.name || "Rahman Trading"} (Owner access)`}
+              title={`${session?.user?.name || "Rahman Trading"} (${
+                session?.user?.role === "admin"
+                  ? pathname.startsWith("/admin")
+                    ? "Admin System Monitor"
+                    : "SME Tenant Mode"
+                  : "Owner access"
+              })`}
             >
               {userInitials}
             </div>
