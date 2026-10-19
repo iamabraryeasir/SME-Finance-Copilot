@@ -1,11 +1,23 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  Loader2,
+  Lock,
+  Mail,
+  ShieldCheck,
+  User,
+  UserPlus,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import toast from "react-hot-toast";
 import { z } from "zod";
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,6 +33,7 @@ import { authClient } from "@/lib/auth-client";
 
 export default function SignUpPage() {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm({
     defaultValues: {
@@ -37,179 +50,270 @@ export default function SignUpPage() {
         });
 
         if (error) {
-          toast.error(error.message || "Failed to create account");
+          toast.error(
+            error.message || "Failed to create account. Please try again.",
+          );
           return;
         }
 
-        toast.success("Account created successfully!");
+        toast.success("Enterprise account created successfully!");
         router.push("/dashboard");
         router.refresh();
       } catch (err: unknown) {
         const message =
-          err instanceof Error ? err.message : "An unexpected error occurred";
+          err instanceof Error
+            ? err.message
+            : "An unexpected registration error occurred";
         toast.error(message);
       }
     },
   });
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 bg-background">
-      <Card className="w-full max-w-md shadow-lg border-border">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold tracking-tight text-foreground">
-            Create an Account
-          </CardTitle>
-          <CardDescription className="text-muted-foreground">
-            Enter your details below to register a new user account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              form.handleSubmit();
+    <Card className="w-full shadow-xl border-border/80 bg-card/95 backdrop-blur-xs transition-all">
+      <CardHeader className="space-y-1.5 text-center pb-4">
+        <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20 text-primary-text border border-primary/30">
+          <UserPlus className="h-5 w-5" />
+        </div>
+        <CardTitle className="font-serif text-2xl font-bold tracking-tight text-foreground">
+          Create Enterprise Account
+        </CardTitle>
+        <CardDescription className="text-xs text-muted-foreground max-w-xs mx-auto">
+          Deploy deterministic cash forecasting and agentic financial guardrails
+          for your enterprise.
+        </CardDescription>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        {/* Value Proposition Highlights */}
+        <div className="rounded-xl border border-border/70 bg-muted/30 p-3 text-xs space-y-1.5">
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase font-mono">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span>Enterprise Guardrails Included</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] text-foreground/90">
+            <div className="flex items-center gap-1.5">
+              <CheckCircle2 className="h-3 w-3 text-primary-text shrink-0" />
+              <span>30-Day Cash Runway Engine</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <CheckCircle2 className="h-3 w-3 text-primary-text shrink-0" />
+              <span>Zero-Trust Ingestion OCR</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <CheckCircle2 className="h-3 w-3 text-primary-text shrink-0" />
+              <span>Human-in-the-Loop Actions</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <CheckCircle2 className="h-3 w-3 text-primary-text shrink-0" />
+              <span>Omni-Channel Telegram Bot</span>
+            </div>
+          </div>
+        </div>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            form.handleSubmit();
+          }}
+          className="space-y-3.5"
+        >
+          {/* Full Name Field */}
+          <form.Field
+            name="name"
+            validators={{
+              onChange: z
+                .string()
+                .min(2, "Full name must be at least 2 characters"),
             }}
-            className="space-y-4"
           >
-            <form.Field
-              name="name"
-              validators={{
-                onChange: z
-                  .string()
-                  .min(2, "Name must be at least 2 characters"),
-              }}
-            >
-              {(field) => {
-                const errors = field.state.meta.errors;
-                return (
-                  <div className="space-y-1.5">
-                    <Label htmlFor={field.name}>Full Name</Label>
+            {(field) => {
+              const errors = field.state.meta.errors;
+              return (
+                <div className="space-y-1">
+                  <Label
+                    htmlFor={field.name}
+                    className="text-xs font-semibold text-foreground"
+                  >
+                    Full Name / Enterprise Contact
+                  </Label>
+                  <div className="relative">
                     <Input
                       id={field.name}
                       name={field.name}
                       type="text"
                       autoComplete="name"
-                      placeholder="Jane Doe"
+                      placeholder="Anisur Rahman"
                       value={field.state.value}
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
+                      className="pl-9 text-xs h-9"
                     />
-                    {errors && errors.length > 0 ? (
-                      <p className="text-xs text-destructive">
-                        {errors
-                          .map((err) =>
-                            typeof err === "string" ? err : err?.message,
-                          )
-                          .join(", ")}
-                      </p>
-                    ) : null}
+                    <User className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   </div>
-                );
-              }}
-            </form.Field>
+                  {errors && errors.length > 0 ? (
+                    <p className="text-[11px] text-destructive font-medium">
+                      {errors
+                        .map((err) =>
+                          typeof err === "string" ? err : err?.message,
+                        )
+                        .join(", ")}
+                    </p>
+                  ) : null}
+                </div>
+              );
+            }}
+          </form.Field>
 
-            <form.Field
-              name="email"
-              validators={{
-                onChange: z
-                  .string()
-                  .email("Please enter a valid email address"),
-              }}
-            >
-              {(field) => {
-                const errors = field.state.meta.errors;
-                return (
-                  <div className="space-y-1.5">
-                    <Label htmlFor={field.name}>Email</Label>
+          {/* Business Email Field */}
+          <form.Field
+            name="email"
+            validators={{
+              onChange: z
+                .string()
+                .email("Please enter a valid business email address"),
+            }}
+          >
+            {(field) => {
+              const errors = field.state.meta.errors;
+              return (
+                <div className="space-y-1">
+                  <Label
+                    htmlFor={field.name}
+                    className="text-xs font-semibold text-foreground"
+                  >
+                    Corporate Email Address
+                  </Label>
+                  <div className="relative">
                     <Input
                       id={field.name}
                       name={field.name}
                       type="email"
                       autoComplete="email"
-                      placeholder="name@example.com"
+                      placeholder="finance@yourcompany.com"
                       value={field.state.value}
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
+                      className="pl-9 text-xs h-9"
                     />
-                    {errors && errors.length > 0 ? (
-                      <p className="text-xs text-destructive">
-                        {errors
-                          .map((err) =>
-                            typeof err === "string" ? err : err?.message,
-                          )
-                          .join(", ")}
-                      </p>
-                    ) : null}
+                    <Mail className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   </div>
-                );
-              }}
-            </form.Field>
+                  {errors && errors.length > 0 ? (
+                    <p className="text-[11px] text-destructive font-medium">
+                      {errors
+                        .map((err) =>
+                          typeof err === "string" ? err : err?.message,
+                        )
+                        .join(", ")}
+                    </p>
+                  ) : null}
+                </div>
+              );
+            }}
+          </form.Field>
 
-            <form.Field
-              name="password"
-              validators={{
-                onChange: z
-                  .string()
-                  .min(6, "Password must be at least 6 characters"),
-              }}
-            >
-              {(field) => {
-                const errors = field.state.meta.errors;
-                return (
-                  <div className="space-y-1.5">
-                    <Label htmlFor={field.name}>Password</Label>
+          {/* Password Field */}
+          <form.Field
+            name="password"
+            validators={{
+              onChange: z
+                .string()
+                .min(6, "Password must be at least 6 characters"),
+            }}
+          >
+            {(field) => {
+              const errors = field.state.meta.errors;
+              return (
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <Label
+                      htmlFor={field.name}
+                      className="text-xs font-semibold text-foreground"
+                    >
+                      Access Password
+                    </Label>
+                    <span className="text-[10px] text-muted-foreground">
+                      Min. 6 characters
+                    </span>
+                  </div>
+                  <div className="relative">
                     <Input
                       id={field.name}
                       name={field.name}
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       autoComplete="new-password"
-                      placeholder="••••••••"
+                      placeholder="••••••••••••"
                       value={field.state.value}
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
+                      className="pl-9 pr-9 text-xs h-9"
                     />
-                    {errors && errors.length > 0 ? (
-                      <p className="text-xs text-destructive">
-                        {errors
-                          .map((err) =>
-                            typeof err === "string" ? err : err?.message,
-                          )
-                          .join(", ")}
-                      </p>
-                    ) : null}
+                    <Lock className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground p-0.5 rounded transition-colors"
+                      title={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
                   </div>
-                );
-              }}
-            </form.Field>
+                  {errors && errors.length > 0 ? (
+                    <p className="text-[11px] text-destructive font-medium">
+                      {errors
+                        .map((err) =>
+                          typeof err === "string" ? err : err?.message,
+                        )
+                        .join(", ")}
+                    </p>
+                  ) : null}
+                </div>
+              );
+            }}
+          </form.Field>
 
-            <form.Subscribe
-              selector={(state) => [state.canSubmit, state.isSubmitting]}
-            >
-              {([canSubmit, isSubmitting]) => (
-                <Button
-                  type="submit"
-                  disabled={!canSubmit || isSubmitting}
-                  className="w-full mt-2"
-                >
-                  {isSubmitting ? "Creating account..." : "Sign Up"}
-                </Button>
-              )}
-            </form.Subscribe>
-          </form>
-        </CardContent>
-        <CardFooter className="flex justify-center border-t border-border pt-4">
-          <p className="text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link
-              href="/sign-in"
-              className="text-primary-text font-semibold hover:underline"
-            >
-              Sign in
-            </Link>
-          </p>
-        </CardFooter>
-      </Card>
-    </div>
+          <form.Subscribe
+            selector={(state) => [state.canSubmit, state.isSubmitting]}
+          >
+            {([canSubmit, isSubmitting]) => (
+              <Button
+                type="submit"
+                disabled={!canSubmit || isSubmitting}
+                className="w-full h-9 mt-1 text-xs font-medium bg-primary text-black hover:bg-primary/90 gap-1.5 shadow-xs"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Provisioning Account...
+                  </>
+                ) : (
+                  <>
+                    <span>Create Enterprise Account</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </>
+                )}
+              </Button>
+            )}
+          </form.Subscribe>
+        </form>
+      </CardContent>
+
+      <CardFooter className="flex justify-center border-t border-border/60 py-3.5 bg-muted/10 rounded-b-2xl">
+        <p className="text-xs text-muted-foreground">
+          Already have an authorized account?{" "}
+          <Link
+            href="/sign-in"
+            className="text-primary-text font-semibold hover:underline"
+          >
+            Sign in to console
+          </Link>
+        </p>
+      </CardFooter>
+    </Card>
   );
 }
