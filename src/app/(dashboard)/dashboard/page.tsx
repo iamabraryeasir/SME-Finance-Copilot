@@ -49,6 +49,7 @@ export default function DashboardPage() {
     receivablesCount?: number;
   } | null>(null);
   const [companyName, setCompanyName] = useState<string>("Rahman Trading");
+  const [todayFormatted, setTodayFormatted] = useState<string>("");
 
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -104,6 +105,13 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchDashboardData(false);
+    setTodayFormatted(
+      new Intl.DateTimeFormat("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      }).format(new Date()),
+    );
   }, [fetchDashboardData]);
 
   const symbol = forecast?.summary.currency === "BDT" ? "৳" : "$";
@@ -114,13 +122,6 @@ export default function DashboardPage() {
   const overdueReceivablesAmount = alerts
     .filter((a) => a.category === "OVERDUE_RECEIVABLE")
     .reduce((sum, a) => sum + (a.impactAmount || 0), 0);
-
-  // Formatted date string for editorial header (e.g. Wednesday, October 16)
-  const todayFormatted = new Intl.DateTimeFormat("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  }).format(new Date());
 
   const activeAlertsCount =
     alertCounts.TOTAL > 0 ? alertCounts.TOTAL : alerts.length;
@@ -134,7 +135,8 @@ export default function DashboardPage() {
             Your cash, at a glance
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            {todayFormatted} · Showing 30-day outlook for{" "}
+            {todayFormatted ? `${todayFormatted} · ` : ""}Showing 30-day outlook
+            for{" "}
             <span className="font-medium text-foreground">
               {companyName || session?.user?.name || "Rahman Trading"}
             </span>

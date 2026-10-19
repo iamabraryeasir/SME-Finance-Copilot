@@ -19,8 +19,6 @@ import {
 } from "@/services/telegram";
 import { inngest } from "@/utils/inngest/client";
 
-export const dynamic = "force-dynamic";
-
 /**
  * Health check & webhook verification endpoint
  */
