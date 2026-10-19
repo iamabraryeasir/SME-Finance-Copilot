@@ -48,7 +48,12 @@ export async function recordAuditLog(params: CreateAuditLogParams) {
  */
 export async function getUserAuditLogs(
   userId: string,
-  options: { limit?: number; offset?: number; actionType?: AuditAction } = {},
+  options: {
+    limit?: number;
+    offset?: number;
+    actionType?: AuditAction;
+    actor?: AuditActor;
+  } = {},
 ) {
   const limit = Math.min(options.limit ?? 25, 100);
   const offset = options.offset ?? 0;
@@ -56,6 +61,7 @@ export async function getUserAuditLogs(
   const where: Prisma.AuditLogWhereInput = {
     userId,
     ...(options.actionType ? { actionType: options.actionType } : {}),
+    ...(options.actor ? { actor: options.actor } : {}),
   };
 
   const [logs, totalCount] = await Promise.all([

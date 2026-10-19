@@ -6,6 +6,7 @@ import {
   LogOut,
   PanelLeftClose,
   Shield,
+  ShieldCheck,
   SlidersHorizontal,
 } from "lucide-react";
 import Image from "next/image";
@@ -134,6 +135,16 @@ const navGroups: NavGroup[] = [
         title: "AI Copilot",
         href: "/copilot",
         icon: Bot,
+      },
+    ],
+  },
+  {
+    label: "Governance",
+    items: [
+      {
+        title: "Audit & Security",
+        href: "/audit",
+        icon: ShieldCheck,
       },
     ],
   },
