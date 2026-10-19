@@ -34,7 +34,7 @@ if (typeof (globalThis as Record<string, unknown>).ImageData === "undefined") {
   (globalThis as Record<string, unknown>).ImageData = class ImageData {};
 }
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI, ThinkingLevel, Type } from "@google/genai";
 import { z } from "zod";
 
 export const extractedInvoiceSchema = z.object({
@@ -236,7 +236,7 @@ export function extractHeuristic(text: string): ExtractedInvoice {
 }
 
 /**
- * Extracts structured invoice metadata from raw text or base64 using Gemini (gemini-2.5-flash),
+ * Extracts structured invoice metadata from raw text or base64 using Gemini 3.8 Flash (@google/genai),
  * with deterministic heuristic fallback when Gemini API key is unavailable or rate-limited.
  */
 export async function extractInvoiceFromDocument(params: {
@@ -249,36 +249,18 @@ export async function extractInvoiceFromDocument(params: {
 
   if (apiKey) {
     try {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({
-        model: "gemini-2.8-flash",
-        generationConfig: {
-          responseMimeType: "application/json",
-          temperature: 0.1,
-        },
-      });
+      const ai = new GoogleGenAI({ apiKey });
 
-      const prompt = `You are a financial document parser for CashPilot AI. Extract invoice data into this JSON schema:
-{
-  "invoiceNumber": "string",
-  "counterparty": "string (customer or supplier name)",
-  "type": "RECEIVABLE" or "PAYABLE",
-  "issueDate": "YYYY-MM-DD",
-  "dueDate": "YYYY-MM-DD",
-  "totalAmount": number,
-  "currency": "BDT", "USD", "EUR", or "GBP",
-  "confidenceScore": float between 0.00 and 1.00 reflecting extraction certainty,
-  "confidenceRationale": "brief explanation if any field is missing, blurry, or ambiguous"
-}
+      const prompt = `You are an expert financial document parser for CashPilot AI. Extract invoice metadata from the provided document accurately according to the JSON schema.
 
 Document Text Content:
 """
-${rawText.slice(0, 8000)}
+${rawText.slice(0, 12000)}
 """`;
 
       const contents: Array<
-        string | { inlineData: { data: string; mimeType: string } }
-      > = [prompt];
+        { text: string } | { inlineData: { data: string; mimeType: string } }
+      > = [{ text: prompt }];
 
       if (
         fileBase64 &&
@@ -292,8 +274,70 @@ ${rawText.slice(0, 8000)}
         });
       }
 
-      const result = await model.generateContent(contents);
-      const responseText = result.response.text();
+      const response = await ai.models.generateContent({
+        model: "gemini-3.8-flash",
+        contents,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              invoiceNumber: {
+                type: Type.STRING,
+                description: "Invoice or bill reference number",
+              },
+              counterparty: {
+                type: Type.STRING,
+                description: "Customer or supplier/vendor name",
+              },
+              type: {
+                type: Type.STRING,
+                enum: ["RECEIVABLE", "PAYABLE"],
+                description:
+                  "RECEIVABLE for customer invoice (inflow), PAYABLE for vendor/supplier bill (outflow)",
+              },
+              issueDate: {
+                type: Type.STRING,
+                description: "Issue date in YYYY-MM-DD format",
+              },
+              dueDate: {
+                type: Type.STRING,
+                description: "Due date in YYYY-MM-DD format",
+              },
+              totalAmount: {
+                type: Type.NUMBER,
+                description: "Total invoice amount as a numeric float",
+              },
+              currency: {
+                type: Type.STRING,
+                description: "Currency code (BDT, USD, EUR, GBP)",
+              },
+              confidenceScore: {
+                type: Type.NUMBER,
+                description: "Confidence score between 0.00 and 1.00",
+              },
+              confidenceRationale: {
+                type: Type.STRING,
+                description:
+                  "Explanation if any field is missing, ambiguous, or estimated",
+              },
+            },
+            required: [
+              "invoiceNumber",
+              "counterparty",
+              "type",
+              "totalAmount",
+              "confidenceScore",
+            ],
+          },
+          thinkingConfig: {
+            thinkingLevel: ThinkingLevel.LOW,
+          },
+          temperature: 0.1,
+        },
+      });
+
+      const responseText = response.text || "";
       const parsedJson = JSON.parse(responseText);
       const validated = extractedInvoiceSchema.safeParse(parsedJson);
 
@@ -305,7 +349,10 @@ ${rawText.slice(0, 8000)}
         validated.error,
       );
     } catch (err) {
-      console.warn("Gemini extraction failed, attempting Groq fallback:", err);
+      console.warn(
+        "Gemini 3.8 Flash extraction failed, attempting Groq fallback:",
+        err,
+      );
     }
   }
 
