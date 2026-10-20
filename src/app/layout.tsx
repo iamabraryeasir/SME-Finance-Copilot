@@ -20,6 +20,14 @@ export const metadata: Metadata = {
   title: "CashPilot AI - SME Financial Intelligence",
   description:
     "Agentic AI for SME Financial Management & Liquidity Command Center",
+  icons: {
+    icon: [
+      { url: "/app_fill_logo.svg", type: "image/svg+xml" },
+      { url: "/app_fill_logo.svg", sizes: "any" },
+    ],
+    shortcut: "/app_fill_logo.svg",
+    apple: "/app_fill_logo.svg",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

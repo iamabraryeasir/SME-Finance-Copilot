@@ -51,9 +51,16 @@ export function LandingOmnichannelShowcase() {
                     </span>
                   </div>
                 </div>
-                <Badge variant="outline" className="text-xs font-mono">
-                  @CashPilotAIBot
-                </Badge>
+                <a
+                  href="https://t.me/cash_pilot_ai_bot"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:opacity-80 transition-opacity"
+                >
+                  <Badge variant="outline" className="text-xs font-mono">
+                    @cash_pilot_ai_bot
+                  </Badge>
+                </a>
               </div>
 
               {/* Simplified conversation snippet */}
