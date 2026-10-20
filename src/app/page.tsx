@@ -1,32 +1,52 @@
-import { ArrowRight } from "lucide-react";
-import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
+import type { Metadata } from "next";
+import { LandingBentoFeatures } from "@/components/landing/bento-features";
+import { LandingComparisonTable } from "@/components/landing/comparison-table";
+import { LandingCtaSection } from "@/components/landing/cta-section";
+import { LandingFooter } from "@/components/landing/footer";
+import { LandingHero } from "@/components/landing/hero-section";
+import { LandingMetricsTicker } from "@/components/landing/metrics-ticker";
+import { LandingNavbar } from "@/components/landing/navbar";
+import { LandingOmnichannelShowcase } from "@/components/landing/omnichannel-showcase";
+import { LandingTechStackSecurity } from "@/components/landing/tech-stack-security";
+
+export const metadata: Metadata = {
+  title:
+    "CashPilot AI — Autonomous SME Cash-Flow Intelligence & Runway Copilot",
+  description:
+    "Deterministic 30-day runway forecasting, zero-effort invoice ingestion, and human-in-the-loop payment workflows for forward-thinking SMEs.",
+};
 
 export default function HomePage() {
   return (
-    <div className="w-full min-h-screen flex items-center justify-center flex-col gap-5">
-      <h1 className="text-4xl font-bold tracking-tight">SME Finance Copilot</h1>
-      <p className="text-muted-foreground text-center max-w-md">
-        Financial Intelligence & SME Cash-Flow Copilot
-      </p>
-      <div className="flex items-center gap-3">
-        <Link href="/sign-in" className={buttonVariants()}>
-          Sign In
-        </Link>
-        <Link
-          href="/sign-up"
-          className={buttonVariants({ variant: "outline" })}
-        >
-          Sign Up
-        </Link>
-        <Link
-          href="http://github.com/iamabraryeasir"
-          className={buttonVariants({ variant: "ghost" })}
-          target="_blank"
-        >
-          Developer <ArrowRight />
-        </Link>
-      </div>
+    <div className="min-h-screen bg-background text-foreground flex flex-col selection:bg-primary selection:text-primary-foreground">
+      {/* Sticky Glassmorphic Header */}
+      <LandingNavbar />
+
+      <main className="flex-1">
+        {/* Hero Section & Live Visual Cockpit */}
+        <LandingHero />
+
+        {/* High-Density Proof Metrics Ticker */}
+        <LandingMetricsTicker />
+
+        {/* Bento Grid: Core Autonomous Pillars */}
+        <LandingBentoFeatures />
+
+        {/* Synchronous Omni-Channel Showcase (Telegram + Web) */}
+        <LandingOmnichannelShowcase />
+
+        {/* Legacy Spreadsheets vs. CashPilot AI Matrix */}
+        <LandingComparisonTable />
+
+        {/* Bank-Grade Security & Technology Stack */}
+        <LandingTechStackSecurity />
+
+        {/* High-Impact Final Conversion Funnel */}
+        <LandingCtaSection />
+      </main>
+
+      {/* Editorial Fintech Footer */}
+      <LandingFooter />
     </div>
   );
 }

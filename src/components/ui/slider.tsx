@@ -13,10 +13,16 @@ interface SliderProps
   defaultValue?: number | number[];
   onValueChange?: (value: number) => void;
   className?: string;
+  trackClassName?: string;
+  indicatorClassName?: string;
+  thumbClassName?: string;
 }
 
 function Slider({
   className,
+  trackClassName,
+  indicatorClassName,
+  thumbClassName,
   value,
   defaultValue,
   min = 0,
@@ -62,11 +68,14 @@ function Slider({
       >
         <SliderPrimitive.Track
           data-slot="slider-track"
-          className="relative h-2 w-full grow overflow-hidden rounded-full bg-muted border border-border/40"
+          className={cn(
+            "relative h-2 w-full grow overflow-hidden rounded-full bg-muted border border-border/40",
+            trackClassName,
+          )}
         >
           <SliderPrimitive.Indicator
             data-slot="slider-indicator"
-            className="h-full bg-primary"
+            className={cn("h-full bg-primary", indicatorClassName)}
           />
         </SliderPrimitive.Track>
         {values.map((val, index) => (
@@ -74,7 +83,10 @@ function Slider({
             key={`thumb-${index}-${val}`}
             index={index}
             data-slot="slider-thumb"
-            className="block h-4 w-4 rounded-full border-2 border-primary bg-background shadow-xs transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:scale-110 active:scale-95 cursor-grab active:cursor-grabbing"
+            className={cn(
+              "block h-4 w-4 rounded-full border-2 border-primary bg-background shadow-xs transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:scale-110 active:scale-95 cursor-grab active:cursor-grabbing",
+              thumbClassName,
+            )}
           />
         ))}
       </SliderPrimitive.Control>

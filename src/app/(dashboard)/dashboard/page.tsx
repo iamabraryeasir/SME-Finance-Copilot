@@ -20,6 +20,7 @@ import toast from "react-hot-toast";
 import type { FinancialAlertItem } from "@/app/(dashboard)/alerts/page";
 import { ForecastChart } from "@/components/dashboard/forecast-chart";
 import { LedgerDistributionChart } from "@/components/dashboard/ledger-distribution-chart";
+import { ZeroInvoiceBanner } from "@/components/dashboard/zero-invoice-banner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -53,6 +54,7 @@ export default function DashboardPage() {
     TOTAL: 0,
   });
   const [invoiceSummary, setInvoiceSummary] = useState<{
+    totalAllTimeCount?: number;
     totalReceivables: number;
     totalPayables: number;
     overdueCount: number;
@@ -145,6 +147,16 @@ export default function DashboardPage() {
   const activeAlertsCount =
     alertCounts.TOTAL > 0 ? alertCounts.TOTAL : alerts.length;
 
+  const hasNoInvoices =
+    !isLoading &&
+    (invoiceSummary?.totalAllTimeCount === 0 ||
+      (invoiceSummary !== null &&
+        invoiceSummary.totalReceivables === 0 &&
+        invoiceSummary.totalPayables === 0 &&
+        invoiceSummary.overdueCount === 0 &&
+        (forecast?.summary.totalProjectedInflow ?? 0) === 0 &&
+        (forecast?.summary.totalProjectedOutflow ?? 0) === 0));
+
   return (
     <div className="space-y-6 pb-12">
       {/* Header matching Design System Mockup */}
@@ -177,6 +189,11 @@ export default function DashboardPage() {
           </Button>
         </div>
       </div>
+
+      {/* Guided Empty State Onboarding Banner */}
+      {hasNoInvoices && (
+        <ZeroInvoiceBanner onDataLoaded={() => fetchDashboardData(true)} />
+      )}
 
       {isLoading ? (
         <div className="py-24 flex flex-col items-center justify-center gap-3 text-muted-foreground">

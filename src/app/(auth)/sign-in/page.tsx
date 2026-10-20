@@ -9,6 +9,7 @@ import {
   Loader2,
   Lock,
   Mail,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -32,6 +33,7 @@ import { authClient } from "@/lib/auth-client";
 export default function SignInPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [isQuickLoggingIn, setIsQuickLoggingIn] = useState(false);
 
   const form = useForm({
     defaultValues: {
@@ -72,6 +74,46 @@ export default function SignInPage() {
       }
     },
   });
+
+  const handleQuickDemoLogin = async () => {
+    try {
+      setIsQuickLoggingIn(true);
+      form.setFieldValue("email", "demo@demo.com");
+      form.setFieldValue("password", "demo123@#");
+
+      const { error } = await authClient.signIn.email({
+        email: "demo@demo.com",
+        password: "demo123@#",
+      });
+
+      if (error) {
+        toast.error(
+          error.message ||
+            "Failed to sign in with demo credentials. Please verify your credentials.",
+        );
+        return;
+      }
+
+      toast.success("Welcome back! Signed in with Demo Account.");
+      const session = await authClient.getSession();
+      const role = session?.data?.user?.role;
+
+      if (role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/dashboard");
+      }
+      router.refresh();
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "An unexpected authentication error occurred";
+      toast.error(message);
+    } finally {
+      setIsQuickLoggingIn(false);
+    }
+  };
 
   return (
     <Card className="w-full shadow-xl border-border/80 bg-card/95 backdrop-blur-xs transition-all">
@@ -229,6 +271,46 @@ export default function SignInPage() {
             )}
           </form.Subscribe>
         </form>
+
+        {/* Quick Demo Access Divider */}
+        <div className="relative my-4">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-border/60" />
+          </div>
+          <div className="relative flex justify-center text-[10px] uppercase">
+            <span className="bg-card px-2 text-muted-foreground font-mono">
+              Or Quick Demo Access
+            </span>
+          </div>
+        </div>
+
+        {/* Quick Demo Login Button */}
+        <div className="space-y-1.5">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleQuickDemoLogin}
+            disabled={isQuickLoggingIn}
+            className="w-full h-9 text-xs font-semibold border-primary/40 bg-primary/10 hover:bg-primary/20 text-foreground gap-2 transition-all shadow-xs cursor-pointer"
+          >
+            {isQuickLoggingIn ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary-text" />
+                <span>Signing in as demo@demo.com...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-3.5 w-3.5 text-primary-text" />
+                <span>Quick Demo Login</span>
+              </>
+            )}
+          </Button>
+
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono px-1">
+            <span>Email: demo@demo.com</span>
+            <span>Pass: demo123@#</span>
+          </div>
+        </div>
       </CardContent>
 
       <CardFooter className="flex justify-center border-t border-border/60 py-3.5 bg-muted/10 rounded-b-2xl">
